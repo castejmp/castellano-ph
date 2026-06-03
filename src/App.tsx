@@ -27,7 +27,7 @@ export default function App() {
       <Nav />
       <WhatsAppFloat />
 
-      <main className="relative">
+      <main className="relative z-10">
         <Hero />
         <Manifesto />
         <Services />

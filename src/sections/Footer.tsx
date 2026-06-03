@@ -5,7 +5,7 @@ import { InstagramIcon, WhatsAppIcon } from '../components/icons';
 export function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer className="border-t border-white/10 py-14">
+    <footer className="relative z-10 border-t border-white/10 py-14">
       <div className="container-px mx-auto max-w-7xl">
         <div className="flex flex-col gap-10 md:flex-row md:items-end md:justify-between">
           <div>

@@ -26,7 +26,7 @@ export function ParticleScene() {
   return (
     <div
       aria-hidden
-      className="fixed inset-0 -z-10"
+      className="fixed inset-0 z-0"
       style={{
         background:
           'radial-gradient(60% 60% at 50% 32%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%), #0a0a0b',
