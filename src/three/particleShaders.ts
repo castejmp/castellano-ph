@@ -23,6 +23,7 @@ export const particleVertexShader = /* glsl */ `
   uniform float uLive;
   uniform float uSize;
   uniform float uPixelRatio;
+  uniform float uCalm; // 1.0 = movimiento reducido (partículas casi quietas)
 
   attribute vec3  aTarget;
   attribute float aSeed;
@@ -84,7 +85,8 @@ export const particleVertexShader = /* glsl */ `
     vec3 pos = mix(position, aTarget, m);
 
     // 2) Movimiento ambiente. La figura "respira" menos que la nube difusa.
-    float ambientAmp = mix(0.55, 0.16, m);
+    // uCalm lo reduce casi a cero (modo movimiento reducido).
+    float ambientAmp = mix(0.55, 0.16, m) * (1.0 - uCalm * 0.94);
     float t = uTime * 0.18 + aSeed * 6.2831;
     vec3 noise = vec3(
       snoise(pos * 0.22 + vec3(t, 0.0, 0.0)),
@@ -136,9 +138,9 @@ export const particleFragmentShader = /* glsl */ `
     alpha = pow(alpha, 1.6);
 
     vec3 color = mix(uColorA, uColorB, vMix);
-    color *= vGlow;
+    // Boost de brillo: así las partículas se ven incluso sin Bloom (mobile).
+    color *= vGlow * 1.6;
 
     gl_FragColor = vec4(color, alpha);
-    #include <colorspace_fragment>
   }
 `;

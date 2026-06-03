@@ -9,6 +9,10 @@ import { BRAND } from '../config';
 
 interface ParticleFieldProps {
   count: number;
+  /** Tamaño base de cada partícula (subilo en mobile, que no tiene Bloom). */
+  size?: number;
+  /** Movimiento reducido: las partículas se muestran casi quietas. */
+  calm?: boolean;
 }
 
 /**
@@ -16,7 +20,7 @@ interface ParticleFieldProps {
  * sitio. Morfea entre figuras según la sección/servicio activo, reacciona al
  * puntero y, en Modo Vivo, late al ritmo del audio.
  */
-export function ParticleField({ count }: ParticleFieldProps) {
+export function ParticleField({ count, size = 1.5, calm = false }: ParticleFieldProps) {
   const { pointer, bands, live, shape } = useExperience();
   const matRef = useRef<THREE.ShaderMaterial>(null);
   const geomRef = useRef<THREE.BufferGeometry>(null);
@@ -46,7 +50,8 @@ export function ParticleField({ count }: ParticleFieldProps) {
       uTreble: { value: 0 },
       uLevel: { value: 0 },
       uLive: { value: 0 },
-      uSize: { value: 1.5 },
+      uSize: { value: size },
+      uCalm: { value: calm ? 1 : 0 },
       uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
       uColorA: { value: new THREE.Color(BRAND.accent) },
       uColorB: { value: new THREE.Color(BRAND.accentWarm) },
@@ -91,7 +96,8 @@ export function ParticleField({ count }: ParticleFieldProps) {
     const p = pointer.current;
     u.uPointer.value.set((p.x * viewport.width) / 2, (p.y * viewport.height) / 2);
     // El "active" decae suavemente cuando el puntero se queda quieto.
-    const targetActive = p.active ? 1 : 0;
+    // En modo calmo (movimiento reducido) el puntero no influye.
+    const targetActive = !calm && p.active ? 1 : 0;
     u.uPointerActive.value += (targetActive - u.uPointerActive.value) * 0.06;
 
     // Audio (Modo Vivo).
