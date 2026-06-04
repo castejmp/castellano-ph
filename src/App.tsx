@@ -2,6 +2,7 @@ import { ExperienceProvider } from './state/ExperienceContext';
 import { useLenis } from './hooks/useLenis';
 import { useReducedMotion } from './hooks/useReducedMotion';
 import { ParticleScene } from './three/ParticleScene';
+import { Loader } from './components/Loader';
 import { Nav } from './components/Nav';
 import { WhatsAppFloat } from './components/WhatsAppFloat';
 import { Hero } from './sections/Hero';
@@ -21,6 +22,9 @@ export default function App() {
 
   return (
     <ExperienceProvider>
+      {/* Intro cinematográfica mientras carga three.js + fuentes. */}
+      <Loader />
+
       {/* Hilo conductor: el campo de partículas detrás de todo el contenido. */}
       <ParticleScene />
 

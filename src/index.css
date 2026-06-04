@@ -15,6 +15,13 @@
   box-sizing: border-box;
 }
 
+/* Cursor de mano en todo lo clickeable (checklist UI/UX Pro Max). */
+button:not(:disabled),
+[role='button'],
+a {
+  cursor: pointer;
+}
+
 html,
 body {
   margin: 0;
@@ -42,6 +49,17 @@ html.lenis body {
 ::selection {
   background: var(--accent);
   color: #0a0a0b;
+}
+
+/* Accesibilidad: foco visible para teclado (regla CRITICAL de la skill UI/UX).
+   Solo en navegación por teclado (:focus-visible), no molesta con el mouse. */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+:where(a, button, input, textarea, select):focus:not(:focus-visible) {
+  outline: none;
 }
 
 /* Scrollbar discreta y oscura. */
