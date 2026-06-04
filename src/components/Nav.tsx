@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { SITE } from '../config';
 
 const LINKS = [
-  { href: '#que-hacemos', label: 'Qué hacemos' },
-  { href: '#trabajos', label: 'Trabajos' },
+  { href: '#captura', label: 'Captura' },
+  { href: '#diseno', label: 'Diseño' },
+  { href: '#pulse-show', label: 'Experiencia' },
   { href: '#packs', label: 'Packs' },
-  { href: '#pulse-show', label: 'pulse.show' },
   { href: '#contacto', label: 'Contacto' },
 ];
 

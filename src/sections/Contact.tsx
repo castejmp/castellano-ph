@@ -1,6 +1,5 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useSectionShape } from '../hooks/useSectionShape';
 import { CONTACT, whatsappLink } from '../config';
 import { Reveal } from '../components/ui/Reveal';
 import { InstagramIcon, WhatsAppIcon } from '../components/icons';
@@ -15,16 +14,12 @@ interface FormState {
 const EVENT_TYPES = ['XV', 'Casamiento', 'Comercial / Marca', 'Otro'];
 
 /**
- * CONTACTO — formulario tipo RSVP. La calma final: las partículas se
- * reagrupan en el monograma.
+ * CONTACTO — formulario tipo RSVP, la calma final del recorrido.
  *
  * Nota: manejado 100% con estado (sin <form> con submit nativo). El "enviar"
  * arma un mensaje y abre WhatsApp con todo pre-cargado.
  */
 export function Contact() {
-  const ref = useRef<HTMLElement>(null);
-  useSectionShape(ref, 'monogram', 0.35);
-
   const [form, setForm] = useState<FormState>({ nombre: '', tipo: '', fecha: '', mensaje: '' });
   const [touched, setTouched] = useState(false);
 
@@ -48,7 +43,7 @@ export function Contact() {
   };
 
   return (
-    <section id="contacto" ref={ref} className="relative py-28 md:py-36">
+    <section id="contacto" className="relative py-28 md:py-36">
       <div className="container-px mx-auto grid max-w-6xl gap-14 lg:grid-cols-2">
         <div>
           <Reveal>

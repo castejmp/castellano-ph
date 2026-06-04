@@ -1,58 +1,3 @@
-import type { ParticleShape } from '../state/ExperienceContext';
-
-/** Disciplinas — la prueba de que no es "solo foto". */
-export interface Discipline {
-  id: string;
-  name: string;
-  blurb: string;
-  shape: ParticleShape;
-}
-
-export const DISCIPLINES: Discipline[] = [
-  {
-    id: 'foto',
-    name: 'Fotografía',
-    blurb: 'Cobertura completa y dirección de imagen. Escribir con luz.',
-    shape: 'aperture',
-  },
-  {
-    id: 'video',
-    name: 'Video',
-    blurb: 'Reel y Racconto. Narrativa audiovisual con ritmo cinematográfico.',
-    shape: 'film',
-  },
-  {
-    id: 'drone',
-    name: 'Drone FPV',
-    blurb: 'Aéreas estabilizadas y vuelos FPV inmersivos.',
-    shape: 'drone',
-  },
-  {
-    id: 'visuales',
-    name: 'Visuales',
-    blurb: 'Piezas para pantallas: entradas, loops y momentos destacados.',
-    shape: 'grid',
-  },
-  {
-    id: 'web',
-    name: 'Web + RSVP',
-    blurb: 'Sitio del evento con sistema de confirmación de asistentes.',
-    shape: 'web',
-  },
-  {
-    id: 'inmersivo',
-    name: 'Inmersivo',
-    blurb: 'Mapping, realidad virtual y aumentada. Esculpir luz en el espacio.',
-    shape: 'volume',
-  },
-  {
-    id: 'pulse',
-    name: 'pulse.show',
-    blurb: 'Pulseras NFC, visuales reactivos y luces sincronizadas en vivo.',
-    shape: 'wave',
-  },
-];
-
 /** Packs escalonados. Cada uno contiene al anterior. */
 export interface Pack {
   id: string;
@@ -106,28 +51,6 @@ export const PACKS: Pack[] = [
     ],
   },
 ];
-
-/** Piezas del portfolio (placeholders editables). */
-export interface Work {
-  id: string;
-  title: string;
-  category: 'XV' | 'Casamiento' | 'Comercial' | 'Inmersivo';
-  kind: 'foto' | 'video';
-  hue: number; // tono base del placeholder (0..360)
-}
-
-export const WORKS: Work[] = [
-  { id: 'w1', title: 'Mili · XV', category: 'XV', kind: 'video', hue: 168 },
-  { id: 'w2', title: 'Lucas & Jor', category: 'Casamiento', kind: 'foto', hue: 24 },
-  { id: 'w3', title: 'Bodega Aurora', category: 'Comercial', kind: 'video', hue: 280 },
-  { id: 'w4', title: 'pulse.show · Live', category: 'Inmersivo', kind: 'video', hue: 150 },
-  { id: 'w5', title: 'Caro · XV', category: 'XV', kind: 'foto', hue: 320 },
-  { id: 'w6', title: 'Festival Ñ', category: 'Comercial', kind: 'video', hue: 200 },
-  { id: 'w7', title: 'Vale & Tomi', category: 'Casamiento', kind: 'foto', hue: 40 },
-  { id: 'w8', title: 'Mapping Catedral', category: 'Inmersivo', kind: 'video', hue: 188 },
-];
-
-export const WORK_FILTERS = ['Todos', 'XV', 'Casamiento', 'Comercial', 'Inmersivo'] as const;
 
 /** Pasos del proceso. */
 export interface ProcessStep {

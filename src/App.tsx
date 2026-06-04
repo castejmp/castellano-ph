@@ -1,16 +1,15 @@
-import { ExperienceProvider } from './state/ExperienceContext';
 import { useLenis } from './hooks/useLenis';
 import { useReducedMotion } from './hooks/useReducedMotion';
-import { ParticleScene } from './three/ParticleScene';
+import { Backdrop } from './components/Backdrop';
 import { Loader } from './components/Loader';
 import { Nav } from './components/Nav';
 import { WhatsAppFloat } from './components/WhatsAppFloat';
 import { Hero } from './sections/Hero';
 import { Manifesto } from './sections/Manifesto';
-import { Services } from './sections/Services';
-import { Portfolio } from './sections/Portfolio';
+import { Captura } from './sections/pillars/Captura';
+import { Diseno } from './sections/pillars/Diseno';
+import { Experiencia } from './sections/pillars/Experiencia';
 import { Packs } from './sections/Packs';
-import { PulseShow } from './sections/PulseShow';
 import { Process } from './sections/Process';
 import { Contact } from './sections/Contact';
 import { Footer } from './sections/Footer';
@@ -21,12 +20,12 @@ export default function App() {
   useLenis(!reduced);
 
   return (
-    <ExperienceProvider>
-      {/* Intro cinematográfica mientras carga three.js + fuentes. */}
+    <>
+      {/* Intro cinematográfica mientras carga la web. */}
       <Loader />
 
-      {/* Hilo conductor: el campo de partículas detrás de todo el contenido. */}
-      <ParticleScene />
+      {/* Fondo cinematográfico (sin partículas): halo de luz + viñeta + grano. */}
+      <Backdrop />
 
       <Nav />
       <WhatsAppFloat />
@@ -34,15 +33,18 @@ export default function App() {
       <main className="relative z-10">
         <Hero />
         <Manifesto />
-        <Services />
-        <Portfolio />
+
+        {/* Los 3 actos — cada uno con su propio eje de movimiento. */}
+        <Captura />
+        <Diseno />
+        <Experiencia />
+
         <Packs />
-        <PulseShow />
         <Process />
         <Contact />
       </main>
 
       <Footer />
-    </ExperienceProvider>
+    </>
   );
 }

@@ -1,8 +1,7 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { PACKS, type Pack } from '../data/content';
 import { SHOW_PRICES, LEGAL_NOTE, whatsappLink } from '../config';
-import { useSectionShape } from '../hooks/useSectionShape';
 import { Reveal } from '../components/ui/Reveal';
 import { Plus, WhatsAppIcon } from '../components/icons';
 
@@ -12,11 +11,8 @@ import { Plus, WhatsAppIcon } from '../components/icons';
  * El Pack III ("Experiencia Total") recibe tratamiento premium.
  */
 export function Packs() {
-  const ref = useRef<HTMLElement>(null);
-  useSectionShape(ref, 'volume', 0.3);
-
   return (
-    <section id="packs" ref={ref} className="relative py-28 md:py-36">
+    <section id="packs" className="relative py-28 md:py-36">
       <div className="container-px mx-auto max-w-7xl">
         <Reveal>
           <p className="eyebrow mb-4">Los packs</p>

@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { PROCESS } from '../data/content';
-import { useSectionShape } from '../hooks/useSectionShape';
 import { Reveal } from '../components/ui/Reveal';
 
 /**
@@ -9,9 +8,7 @@ import { Reveal } from '../components/ui/Reveal';
  * La línea se "dibuja" a medida que scrolleás (scaleY ligado al scroll).
  */
 export function Process() {
-  const ref = useRef<HTMLElement>(null);
   const listRef = useRef<HTMLOListElement>(null);
-  useSectionShape(ref, 'drone', 0.3);
 
   const { scrollYProgress } = useScroll({
     target: listRef,
@@ -20,7 +17,7 @@ export function Process() {
   const lineScale = useSpring(scrollYProgress, { stiffness: 120, damping: 30 });
 
   return (
-    <section id="proceso" ref={ref} className="relative py-28 md:py-36">
+    <section id="proceso" className="relative py-28 md:py-36">
       <div className="container-px mx-auto max-w-5xl">
         <Reveal>
           <p className="eyebrow mb-4">Proceso</p>
