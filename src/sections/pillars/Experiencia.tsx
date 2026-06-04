@@ -72,9 +72,9 @@ export function Experiencia() {
   }, [reduced]);
 
   return (
-    <section id="pulse-show" ref={root} className="relative h-screen overflow-hidden">
+    <section id="pulse-show" ref={root} className="relative overflow-hidden md:h-screen">
       {/* Encabezado del acto */}
-      <div className="container-px absolute left-0 top-0 z-30 w-full pt-24 md:pt-28">
+      <div className="container-px relative left-0 top-0 z-30 w-full pt-24 md:absolute md:pt-28">
         <p className="eyebrow mb-2">Acto 03</p>
         <h2 className="font-display text-4xl font-bold tracking-tightest md:text-6xl">
           Experiencia<span className="text-[var(--accent)]">.</span>
@@ -133,7 +133,7 @@ export function Experiencia() {
       </div>
 
       {/* Fallback mobile / reduced-motion: lista vertical */}
-      <div className="container-px relative z-10 mx-auto flex h-full max-w-md flex-col justify-center gap-3 pt-40 md:hidden">
+      <div className="container-px relative z-10 mx-auto flex max-w-md flex-col gap-3 pb-24 pt-6 md:hidden">
         {LAYERS.map((l) => (
           <div
             key={l.title}

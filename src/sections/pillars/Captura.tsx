@@ -56,7 +56,7 @@ export function Captura() {
   }, [reduced]);
 
   return (
-    <section id="captura" ref={root} className="relative h-screen overflow-hidden">
+    <section id="captura" ref={root} className="relative overflow-hidden pb-20 md:h-screen md:pb-0">
       {/* Palabra de fondo (capa lenta) */}
       <div
         ref={word}
@@ -66,7 +66,7 @@ export function Captura() {
       </div>
 
       {/* Encabezado fijo del acto */}
-      <div className="container-px absolute left-0 top-0 z-20 w-full pt-24 md:pt-28">
+      <div className="container-px relative left-0 top-0 z-20 w-full pt-24 md:absolute md:pt-28">
         <p className="eyebrow mb-2">Acto 01</p>
         <h2 className="font-display text-4xl font-bold tracking-tightest md:text-6xl">
           Captura<span className="text-[var(--accent)]">.</span>
@@ -78,7 +78,7 @@ export function Captura() {
       </div>
 
       {/* Pista horizontal */}
-      <div className="flex h-full items-center">
+      <div className="mt-8 flex items-center md:mt-0 md:h-full">
         <div
           ref={track}
           className="flex items-center gap-6 px-6 md:gap-10 md:px-[8vw] [scrollbar-width:none] max-md:overflow-x-auto [&::-webkit-scrollbar]:hidden"

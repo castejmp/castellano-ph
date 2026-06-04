@@ -1,5 +1,7 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform, type MotionValue } from 'framer-motion';
+import { useIsMobile } from '../../hooks/useIsMobile';
+import { useReducedMotion } from '../../hooks/useReducedMotion';
 
 /**
  * BLOQUE 2 · DISEÑO — eje de movimiento VERTICAL hacia arriba.
@@ -93,12 +95,17 @@ const COLUMNS: Card[][] = [
 
 export function Diseno() {
   const ref = useRef<HTMLElement>(null);
+  const isMobile = useIsMobile();
+  const reduced = useReducedMotion();
+  // El parallax solo tiene sentido en desktop: en mobile las columnas se apilan
+  // en una sola, así que mover cada una a distinta velocidad las descuadra.
+  const parallax = !isMobile && !reduced;
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start end', 'end start'],
   });
 
-  // Cada columna se eleva a distinta velocidad → parallax vertical.
+  // Cada columna se eleva a distinta velocidad → parallax vertical (desktop).
   const yCols = [
     useTransform(scrollYProgress, [0, 1], ['12%', '-34%']),
     useTransform(scrollYProgress, [0, 1], ['28%', '-12%']),
@@ -110,7 +117,7 @@ export function Diseno() {
     <section id="diseno" ref={ref} className="relative overflow-hidden py-32 md:py-48">
       {/* Palabra de fondo que se eleva */}
       <motion.div
-        style={{ y: yWord }}
+        style={{ y: parallax ? yWord : 0 }}
         className="pointer-events-none absolute inset-x-0 top-1/2 z-0 select-none text-center font-display text-[26vw] font-bold leading-none tracking-tightest text-white/[0.04]"
       >
         DISEÑO
@@ -128,9 +135,9 @@ export function Diseno() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid grid-cols-1 items-start gap-5 sm:grid-cols-2 md:grid-cols-3">
           {COLUMNS.map((col, ci) => (
-            <Column key={ci} cards={col} y={yCols[ci]} />
+            <Column key={ci} cards={col} y={parallax ? yCols[ci] : undefined} />
           ))}
         </div>
       </div>
@@ -138,7 +145,7 @@ export function Diseno() {
   );
 }
 
-function Column({ cards, y }: { cards: Card[]; y: MotionValue<string> }) {
+function Column({ cards, y }: { cards: Card[]; y?: MotionValue<string> }) {
   return (
     <motion.div style={{ y }} className="space-y-5">
       {cards.map((card) => (
