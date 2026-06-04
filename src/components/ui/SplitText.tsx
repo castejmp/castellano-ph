@@ -20,25 +20,23 @@ export function SplitText({ text, className, highlight = [], delay = 0 }: SplitT
   return (
     <span className={className} aria-label={text}>
       {words.map((word, i) => (
-        <span
-          key={`${word}-${i}`}
-          aria-hidden
-          className="inline-block overflow-hidden align-baseline"
-        >
-          <motion.span
-            className={`inline-block ${isHot(word) ? 'text-glow' : ''}`}
-            initial={{ y: '110%' }}
-            whileInView={{ y: 0 }}
-            viewport={{ once: true, margin: '-15% 0px' }}
-            transition={{
-              duration: 0.85,
-              delay: delay + i * 0.045,
-              ease: [0.16, 1, 0.3, 1],
-            }}
-          >
-            {word}
-            {i < words.length - 1 ? ' ' : ''}
-          </motion.span>
+        <span key={`${word}-${i}`} aria-hidden className="inline-block align-baseline">
+          <span className="inline-block overflow-hidden align-baseline">
+            <motion.span
+              className={`inline-block ${isHot(word) ? 'text-glow' : ''}`}
+              initial={{ y: '110%' }}
+              whileInView={{ y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{
+                duration: 0.85,
+                delay: delay + i * 0.045,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+            >
+              {word}
+            </motion.span>
+          </span>
+          {i < words.length - 1 ? ' ' : ''}
         </span>
       ))}
     </span>
