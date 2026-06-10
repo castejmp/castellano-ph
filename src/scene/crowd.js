@@ -59,7 +59,10 @@ const FIGURE_FILES = [
   { file: 'cameraoperator.glb', slot: { x: -10.3, z: -6.5, face: 1.81 } },
   // EDICIÓN: los dos editores con su mesa (un bloque), junto a la barra.
   { file: 'editores.glb', slot: { x: 8.6, z: 18.4, face: Math.PI }, height: 1.5 },
-  // worker.glb y toy.glb: identidad a confirmar → se suman cuando se sepa.
+  // VISUALES: el VJ en su consola.
+  { file: 'worker.glb', slot: { x: 4.6, z: -18.4, face: 0 } },
+  // DISEÑO: el diseñador en su mesa junto a la barra.
+  { file: 'toy.glb', slot: { x: -8.5, z: 19.35, face: Math.PI } },
 ];
 
 export class Crowd {
@@ -199,13 +202,12 @@ export class Crowd {
    * ────────────────────────────────────────────── */
   async upgradeFromGLB(base, onProgress) {
     const { loadPeopleGLB } = await import('./glbPeople.js');
-    const prog = [0, 0, 0];
-    const report = () => onProgress?.((prog[0] + prog[1] + prog[2]) / 3);
-    const [guests, staff, ...figs] = await Promise.all([
+    const prog = [0, 0];
+    const report = () => onProgress?.((prog[0] + prog[1]) / 2);
+    const [guests, ...figs] = await Promise.all([
       loadPeopleGLB(`${base}models/invitados.glb`, (p) => { prog[0] = p; report(); }),
-      loadPeopleGLB(`${base}models/staff.glb`, (p) => { prog[1] = p; report(); }),
       ...FIGURE_FILES.map((f) =>
-        loadPeopleGLB(`${base}models/people/${f.file}`, (p) => { prog[2] = p; report(); })
+        loadPeopleGLB(`${base}models/people/${f.file}`, (p) => { prog[1] = p; report(); })
           .catch(() => null)),
     ]);
 
@@ -238,33 +240,17 @@ export class Crowd {
       this._instanceGLB(fig.geometry, guests.material, [slot], false);
     });
 
-    /* ── Figuras individuales (un archivo = una persona) ── */
-    // Reemplazan al crew: cada una a su puesto, normalizada a su altura.
-    const offProc = new Set();
+    /* ── Figuras individuales (un archivo = una persona) ──
+       Todo el team ya viene en archivos sueltos: no queda staff legacy. */
     figs.forEach((g, i) => {
       if (!g) return; // archivo no disponible todavía → lo salteamos
-      const { slot, height = 1.7, off } = FIGURE_FILES[i];
+      const { slot, height = 1.7 } = FIGURE_FILES[i];
       const fig = g.figures[0];
       const s = height / fig.height;
       fig.geometry.scale(s, s, s);
       fig.geometry.rotateY(ROT);
       this._instanceGLB(fig.geometry, g.material, [slot], true);
-      off?.forEach((o) => offProc.add(o));
     });
-
-    /* ── Staff legacy (diseñador, VJ) — hasta que lleguen como
-       archivos individuales. Los editores ya vienen en editores.glb ── */
-    const sStaff = 1.7 / Math.max(...staff.figures.map((f) => f.height));
-    const STAFF_PLACE = [
-      { fig: staff.figures[1], slot: { x: 4.6, z: -18.4, face: 0 } },       // VISUALES: VJ
-      { fig: staff.figures[2], slot: { x: -8.5, z: 19.35, face: Math.PI } },// DISEÑO
-    ];
-    for (const { fig, slot } of STAFF_PLACE) {
-      if (!fig) continue;
-      fig.geometry.scale(sStaff, sStaff, sStaff);
-      fig.geometry.rotateY(ROT);
-      this._instanceGLB(fig.geometry, staff.material, [slot], true);
-    }
 
     // Apagar los operadores procedurales reemplazados (escala 0).
     // groups.op = [diseño, foto, video, vj, dj, piloto].
