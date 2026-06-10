@@ -183,6 +183,36 @@ export function buildWorld(scene) {
     box(0.23, 0.27, 0.012, '#e9e6dd', -24 + Math.cos(-1.02 + Math.PI / 2) * u * 6.1, 2.34, -13.8 + Math.sin(-1.02 + Math.PI / 2) * u * 6.1, -1.02 + (i % 2 ? 0.12 : -0.1));
   }
 
+  /* ── Cámara de VIDEO en trípode, al borde de la pista ── */
+  const vRy = 2.474; // apunta al centro de la pista
+  for (let l = 0; l < 3; l++) {
+    const a = (l / 3) * Math.PI * 2;
+    cyl(0.025, 0.035, 1.6, 5, '#33333b', -3.3 + Math.cos(a) * 0.32, 0.77, -4.8 + Math.sin(a) * 0.32, Math.cos(a) * 0.36, Math.sin(a) * 0.36);
+  }
+  box(0.42, 0.28, 0.55, '#16161c', -3.3, 1.7, -4.8, vRy);
+  cyl(0.07, 0.1, 0.2, 8, '#0c0c10', -3.3 + 0.22, 1.7, -4.8 - 0.28, 0, Math.PI / 2); // lente
+  box(0.2, 0.14, 0.03, '#26262e', -3.3 - 0.3, 1.78, -4.8 + 0.18, vRy + 0.5); // visor
+
+  /* ── Consola VJ junto a la cabina (VISUALES) ── */
+  box(1.7, 0.08, 0.85, '#1d1d23', 4.6, 0.96, -17.6);
+  box(0.08, 0.95, 0.7, '#15151a', 3.85, 0.48, -17.6);
+  box(0.08, 0.95, 0.7, '#15151a', 5.35, 0.48, -17.6);
+  box(0.55, 0.04, 0.4, '#26262e', 4.35, 1.02, -17.5, 0.25); // laptop base
+  const vjLap = new THREE.BoxGeometry(0.55, 0.38, 0.03);
+  vjLap.rotateX(-0.4); vjLap.rotateY(0.25); vjLap.translate(4.32, 1.22, -17.68);
+  push(vjLap, '#101016');
+  for (const mx of [-0.55, 0.45]) {
+    const mon = new THREE.BoxGeometry(0.52, 0.36, 0.04);
+    mon.rotateX(-0.18); mon.rotateY(mx < 0 ? 0.3 : -0.3);
+    mon.translate(4.6 + mx + 0.1, 1.38, -17.85);
+    push(mon, '#15151c');
+    cyl(0.04, 0.05, 0.3, 5, '#22222a', 4.6 + mx + 0.1, 1.12, -17.85);
+  }
+
+  /* ── Control remoto del piloto de DRONE ── */
+  box(0.22, 0.06, 0.15, '#1c1c22', 13.22, 0.97, 6.78, -2.25);
+  cyl(0.008, 0.008, 0.22, 4, '#44444e', 13.18, 1.12, 6.74);
+
   /* ── Merge: todo lo estático en un draw call ── */
   const merged = mergeGeometries(parts);
   merged.computeVertexNormals();

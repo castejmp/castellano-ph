@@ -91,16 +91,18 @@ export const CONFIG = {
    * fov amplio = plano abierto · fov corto = tele.
    * track:'drone' → el lookAt persigue al drone.
    * ────────────────────────────────────────────── */
+  // Estilo isométrico de diorama: teles largas que aplanan la perspectiva.
+  // Apertura y cierre desde el ángulo clásico de maqueta (45° / ~35°).
   shots: [
-    { pos: [30, 26, 36], look: [0, 0, 0], fov: 66 },          // 0 PLANO GENERAL
-    { pos: [-17.5, 2.6, 10.5], look: [-22.5, 1.0, 5.5], fov: 32 }, // 1 DISEÑO
-    { pos: [17.0, 1.9, -6.0], look: [23.0, 1.5, -13.0], fov: 34 }, // 2 FOTOGRAFÍA
-    { pos: [-3.0, 1.6, -2.0], look: [1.5, 1.6, -12.0], fov: 68 }, // 3 VIDEO
-    { pos: [0, 2.6, -7.5], look: [0, 4.0, -21.0], fov: 46 },   // 4 VISUALES
-    { pos: [-18.0, 2.0, -8.0], look: [-23.0, 1.3, -13.5], fov: 30 }, // 5 EDICIÓN
-    { pos: [12, 13, 12], look: [0, 9, 0], fov: 40, track: 'drone' }, // 6 DRONE
-    { pos: [11, 3.2, 5], look: [-3, 4, -16], fov: 64 },        // 7 INMERSIVO
-    { pos: [-30, 22, 40], look: [0, 2, 0], fov: 62 },          // 8 FINALMENTE
+    { pos: [45, 36, 45], look: [0, 0, 0], fov: 30 },           // 0 PLANO GENERAL (iso)
+    { pos: [-14.5, 5.5, 13.5], look: [-22.5, 1.0, 5.5], fov: 24 },  // 1 DISEÑO: el que dibuja
+    { pos: [13.5, 6.2, -4.2], look: [22.0, 1.4, -12.6], fov: 26 },  // 2 FOTOGRAFÍA: tras la cámara
+    { pos: [-6.5, 3.0, 1.0], look: [-2.5, 1.6, -6.0], fov: 44 },    // 3 VIDEO: cámara + trípode
+    { pos: [2.5, 3.6, -10.5], look: [2.0, 2.5, -19.5], fov: 38 },   // 4 VISUALES: VJ, compu y pantallas
+    { pos: [-14.8, 5.3, -5.8], look: [-22.4, 1.3, -12.9], fov: 24 },// 5 EDICIÓN: sentado en la compu
+    { pos: [17, 14.5, 15], look: [0, 9, -4], fov: 32, track: 'drone' }, // 6 DRONE
+    { pos: [12, 4.5, 7], look: [-3, 4, -16], fov: 50 },         // 7 INMERSIVO
+    { pos: [-45, 36, 45], look: [0, 1, 0], fov: 30 },           // 8 FINALMENTE (iso opuesto)
   ],
 
   /* ──────────────────────────────────────────────
@@ -115,7 +117,7 @@ export const CONFIG = {
       accent: '#ff2b2b',
       trackUrl: null,
       theme: {
-        bg: '#070104', fog: '#12030a', fogDensity: 0.016,
+        bg: '#070104', fog: '#12030a', fogDensity: 0.010,
         hemiSky: '#52121f', hemiGround: '#08020a', hemiI: 0.55,
         key: '#ff2b2b', keyI: 900, wash: '#ff3355', washI: 500,
         practical: '#ff7a45', practicalI: 60,
@@ -140,7 +142,7 @@ export const CONFIG = {
       accent: '#9caf88',
       trackUrl: null,
       theme: {
-        bg: '#d9d2c0', fog: '#e3dccb', fogDensity: 0.010,
+        bg: '#d9d2c0', fog: '#e3dccb', fogDensity: 0.007,
         hemiSky: '#fff4dd', hemiGround: '#8fa080', hemiI: 1.5,
         key: '#ffe2b0', keyI: 1400, wash: '#f7ecd9', washI: 700,
         practical: '#ffd9a0', practicalI: 40,
@@ -165,7 +167,7 @@ export const CONFIG = {
       accent: '#1f93e0',
       trackUrl: null,
       theme: {
-        bg: '#020609', fog: '#04101c', fogDensity: 0.013,
+        bg: '#020609', fog: '#04101c', fogDensity: 0.009,
         hemiSky: '#0e3a5c', hemiGround: '#020508', hemiI: 0.7,
         key: '#1f93e0', keyI: 1000, wash: '#2fc4ff', washI: 450,
         practical: '#9adcff', practicalI: 35,
