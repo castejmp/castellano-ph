@@ -148,37 +148,8 @@ export class Extras {
     scene.add(this.flash);
     this.flashEnergy = 0;
 
-    /* ── Pantalla de edición: timeline dibujado a mano ── */
-    const cnv = document.createElement('canvas');
-    cnv.width = 256; cnv.height = 160;
-    const c2 = cnv.getContext('2d');
-    c2.fillStyle = '#101014'; c2.fillRect(0, 0, 256, 160);
-    c2.fillStyle = '#1c1c24'; c2.fillRect(0, 96, 256, 64);
-    const clipCols = ['#f63f2f', '#fe720c', '#feca0d', '#7fc527', '#1f93e0'];
-    let cx = 6;
-    for (let i = 0; i < 9; i++) {
-      const w = 14 + ((i * 37) % 30);
-      c2.fillStyle = clipCols[i % 5];
-      c2.fillRect(cx, 104 + (i % 3) * 18, w, 12);
-      cx += w + 4;
-    }
-    c2.fillStyle = '#2e2e3a'; c2.fillRect(8, 8, 150, 80);
-    c2.fillStyle = '#e9e6dd'; c2.fillRect(168, 8, 80, 36);
-    c2.fillStyle = '#55555f'; c2.fillRect(168, 52, 80, 36);
-    c2.fillStyle = '#fff'; c2.fillRect(127, 96, 2, 64);
-    const tex = new THREE.CanvasTexture(cnv);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    const es = ANCHORS.editScreen;
-    this.editScreen = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.42, 0.84),
-      new THREE.MeshBasicMaterial({ map: tex })
-    );
-    this.editScreen.position.set(...es.pos);
-    this.editScreen.rotation.y = es.ry;
-    this.editScreen.translateZ(0.05);
-    this.editScreen.matrixAutoUpdate = false;
-    this.editScreen.updateMatrix();
-    scene.add(this.editScreen);
+    // La pantalla de edición ya no hace falta: el modelo GLB del editor
+    // viene con su propia PC.
 
     /* ── Superficies de mapping (INMERSIVO) ── */
     this.mapUniforms = {

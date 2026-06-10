@@ -24,20 +24,23 @@ const HAIRS = ['#2b2118', '#4a3320', '#171311', '#6b4a2a', '#8a6a3f', '#1f1a14']
 
 /* Elenco — coordenadas del salón. kind = silueta · tilt = inclinación. */
 const CAST = [
-  { kind: 'op', x: -12.4, z: -9.15, face: 0, tilt: 0.18, dance: 0.12 },        // DISEÑO: al oeste de la pista
+  { kind: 'op', x: -8.5, z: 19.35, face: Math.PI, tilt: 0.18, dance: 0.12 },   // DISEÑO: junto a la barra
   { kind: 'op', x: 3.5, z: -6.6, face: 0.4, tilt: 0.05, dance: 0.25 },         // FOTOGRAFÍA: entre la gente
   { kind: 'op', x: -3.64, z: -4.37, face: 2.474, tilt: 0.06, dance: 0.18 },    // VIDEO: operando la cámara
   { kind: 'op', x: 4.6, z: -18.4, face: 0, tilt: 0.1, dance: 0.4 },            // VISUALES (VJ en consola)
   { kind: 'op', x: 0, y: 0.5, z: -19.45, face: 0, tilt: 0, dance: 0.95 },      // DJ en tarima, visible
-  { kind: 'opSeated', x: 12.4, z: -8.5, face: Math.PI, dance: 0.08 },          // EDICIÓN: al este de la pista
+  { kind: 'opSeated', x: 12.4, z: -8.8, face: -Math.PI / 2, dance: 0.08 },     // EDICIÓN: al este de la pista
   { kind: 'op', x: 13.5, z: 7, face: -2.25, tilt: -0.14, dance: 0.1 },         // DRONE: piloto
 ];
 
 /* Dónde cae el spotlight "jugador seleccionado" por estación. */
 export const STATION_SPOTS = {
-  1: [-12.4, -9.15], 2: [3.5, -6.6], 3: [-3.64, -4.37],
-  4: [4.6, -18.4], 5: [12.4, -8.5], 6: [13.5, 7],
+  1: [-8.5, 19.35], 2: [3.5, -6.6], 3: [-3.64, -4.37],
+  4: [4.6, -18.4], 5: [12.4, -8.8], 6: [13.5, 7],
 };
+
+/* El piso transitable queda a y≈0.1 (pista + filo de la losa). */
+const FLOOR_Y = 0.1;
 
 export class Crowd {
   constructor(scene, isMobile = false) {
@@ -144,7 +147,7 @@ export class Crowd {
         const h = seated ? 1 : (p.s ?? 1) * (0.94 + Math.random() * 0.12);
         e.set(p.tilt ?? 0, p.face ?? Math.random() * Math.PI * 2, 0, 'YXZ');
         q.setFromEuler(e);
-        pos.set(p.x, p.y ?? 0, p.z);
+        pos.set(p.x, p.y ?? FLOOR_Y, p.z);
         const wide = seated ? 1 : 0.96 + Math.random() * 0.08;
         sc.set(wide, h, wide);
         m4.compose(pos, q, sc);
@@ -171,8 +174,10 @@ export class Crowd {
 
   /* ──────────────────────────────────────────────
    * UPGRADE A GLB — los modelos reales del estudio.
-   * Invitados (10 poses de baile) reemplazan al público; el team
-   * (fotógrafo, filmmaker, diseñador, VJ, editor) a los operadores.
+   * Invitados (10 poses, ESTÁTICOS) reemplazan al público; el team
+   * a los operadores. Orden real de la fila del team:
+   *   [0] editor (sentado con su mesa) · [1] VJ · [2] diseñador ·
+   *   [3] filmmaker (con cámara) · [4] fotógrafo (con cámara)
    * El DJ y el piloto de drone siguen procedurales.
    * ────────────────────────────────────────────── */
   async upgradeFromGLB(base, onProgress) {
@@ -201,33 +206,31 @@ export class Crowd {
       this.meshes = this.meshes.filter((x) => !gk.meshes.includes(x));
       delete this.byKind[kind];
     }
-    // En celu, mitad de multitud: cuida los fps con la malla cruda.
-    const spots = this.isMobile ? guestSpots.filter((_, i) => i % 2 === 0) : guestSpots;
+    // La malla optimizada aguanta la multitud completa también en celu.
+    const spots = guestSpots;
 
     const gScale = 1.6 / median(guests.figures.map((f) => f.height));
-    const gMat = this._patch(guests.material.clone());
     const perVariant = guests.figures.map(() => []);
     spots.forEach((p, i) => perVariant[i % guests.figures.length].push(p));
     guests.figures.forEach((fig, vi) => {
       fig.geometry.scale(gScale, gScale, gScale);
       fig.geometry.rotateY(ROT);
-      this._instanceGLB(fig.geometry, gMat, perVariant[vi], false);
+      this._instanceGLB(fig.geometry, guests.material, perVariant[vi], false);
     });
 
-    /* ── Team: orden de la referencia → estaciones ── */
+    /* ── Team: figura i (orden de fila) → su estación ── */
     const TEAM_SLOTS = [
-      { x: 3.5, z: -6.6, face: 0.4, dance: 0.25 },       // FOTOGRAFÍA (entre la gente)
-      { x: -3.64, z: -4.37, face: 2.474, dance: 0.2 },   // VIDEO
-      { x: -12.4, z: -9.15, face: 0, dance: 0.15 },      // DISEÑO
-      { x: 4.6, z: -18.4, face: 0, dance: 0.35 },        // VISUALES (VJ)
-      { x: 12.4, z: -8.5, face: Math.PI, dance: 0.1 },   // EDICIÓN
+      { x: 12.4, z: -8.8, face: -Math.PI / 2 },  // [0] EDITOR: este de la pista, mirándola (trae su mesa y PC)
+      { x: 4.6, z: -18.4, face: 0 },             // [1] VJ en la consola
+      { x: -8.5, z: 19.35, face: Math.PI },      // [2] DISEÑADOR: junto a la barra
+      { x: -3.64, z: -4.37, face: 2.474 },       // [3] FILMMAKER (trae su cámara)
+      { x: 3.5, z: -6.6, face: 0.4 },            // [4] FOTÓGRAFO: entre la gente (trae su cámara)
     ];
     const tScale = 1.64 / median(team.figures.map((f) => f.height));
-    const tMat = this._patch(team.material.clone());
     team.figures.slice(0, TEAM_SLOTS.length).forEach((fig, i) => {
       fig.geometry.scale(tScale, tScale, tScale);
       fig.geometry.rotateY(ROT);
-      this._instanceGLB(fig.geometry, tMat, [TEAM_SLOTS[i]], true);
+      this._instanceGLB(fig.geometry, team.material, [TEAM_SLOTS[i]], true);
     });
 
     // Apagar los operadores procedurales reemplazados (escala 0).
@@ -236,17 +239,10 @@ export class Crowd {
     this._zeroInstances('opSeated', [0]);
   }
 
+  /** Las figuras GLB van ESTÁTICAS: material sin parche de baile. */
   _instanceGLB(geom, mat, spots, isCast) {
     const n = spots.length;
     if (!n) return;
-    const phases = new Float32Array(n);
-    const dances = new Float32Array(n);
-    spots.forEach((p, i) => {
-      phases[i] = Math.random();
-      dances[i] = (p.dance ?? 0.5) * (0.7 + Math.random() * 0.5);
-    });
-    geom.setAttribute('aPhase', new THREE.InstancedBufferAttribute(phases, 1));
-    geom.setAttribute('aDance', new THREE.InstancedBufferAttribute(dances, 1));
     const mesh = new THREE.InstancedMesh(geom, mat, n);
     const m4 = new THREE.Matrix4();
     const q = new THREE.Quaternion();
@@ -258,7 +254,7 @@ export class Crowd {
       q.setFromEuler(e);
       const h = isCast ? 1 : 0.92 + Math.random() * 0.16; // escala uniforme: sin deformar
       sc.set(h, h, h);
-      pos.set(p.x, p.y ?? 0, p.z);
+      pos.set(p.x, (p.y ?? 0) + FLOOR_Y, p.z); // pies sobre el piso real (y≈0.1)
       m4.compose(pos, q, sc);
       mesh.setMatrixAt(i, m4);
     });

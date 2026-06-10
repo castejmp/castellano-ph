@@ -65,13 +65,17 @@ export class Post {
     this.bokeh.enabled = on;
   }
 
-  /** focus: distancia cámara→lookAt · fov: para escalar la apertura. */
-  render(focus, fov) {
+  /**
+   * focus: distancia cámara→lookAt · fov: escala la apertura ·
+   * dofBoost: 0..1 — en las estaciones de operador (spotlight) el
+   * fondo se desenfoca fuerte: el "jugador seleccionado" en foco.
+   */
+  render(focus, fov, dofBoost = 0) {
     if (this.bokehOn) {
       const u = this.bokeh.uniforms;
       u.focus.value = focus;
       // Tele = más DoF; gran angular = casi todo en foco.
-      u.aperture.value = Math.max(0, (70 - fov) / 70) * 0.00012;
+      u.aperture.value = Math.max(0, (70 - fov) / 70) * 0.00012 + dofBoost * 0.00028;
     }
     this.composer.render();
   }

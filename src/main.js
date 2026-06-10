@@ -160,7 +160,11 @@ function frame() {
   cameraRig.update(scroll.progress, dt, extras.dronePos, reduced);
   ui.setStation(f);
 
-  if (post) post.render(cameraRig.focusDistance, camera.fov);
+  // DoF de "jugador seleccionado": en las estaciones de operador el
+  // fondo se desenfoca a la par del spotlight.
+  const stR = Math.round(f);
+  const dofBoost = stR >= 1 && stR <= 6 ? Math.max(0, 1 - Math.abs(f - stR) * 2.2) : 0;
+  if (post) post.render(cameraRig.focusDistance, camera.fov, dofBoost);
   else renderer.render(scene, camera);
 
   debug.update({

@@ -28,7 +28,6 @@ export const ANCHORS = {
   ],
   // El flash dispara donde está el fotógrafo: entre la gente.
   flashAt: [3.62, 1.7, -6.35],
-  editScreen: { pos: [12.4, 1.78, -9.89], ry: Math.PI },
   // Parrilla de luces: cabezales móviles, washes y strobos.
   rig: {
     heads: [[-5.5, 5.8, -6.5], [5.5, 5.8, -6.5], [-5.5, 5.8, -13], [5.5, 5.8, -13]],
@@ -152,47 +151,25 @@ export function buildWorld(scene) {
   }
   cyl(0.55, 0.62, 0.42, 8, '#3c3630', 18.6, 0.21, 14.9);
 
-  /* ── Mesa de DISEÑO al borde OESTE de la pista ── */
-  box(3.2, 0.12, 1.75, '#4a4038', -12.4, 0.96, -8.4);
-  for (const [lx, lz] of [[-1.4, -0.72], [1.4, -0.72], [-1.4, 0.72], [1.4, 0.72]]) {
-    cyl(0.05, 0.06, 0.92, 6, '#2e2822', -12.4 + lx, 0.46, -8.4 + lz);
+  /* ── Mesa de DISEÑO junto a la barra (fuera de la fiesta) ── */
+  box(2.2, 0.1, 1.2, '#4a4038', -8.5, 0.93, 18.2);
+  for (const [lx, lz] of [[-0.95, -0.45], [0.95, -0.45], [-0.95, 0.45], [0.95, 0.45]]) {
+    cyl(0.045, 0.055, 0.9, 6, '#2e2822', -8.5 + lx, 0.45, 18.2 + lz);
   }
-  const paperRots = [0.2, -0.4, 0.9, -0.15, 0.55, -0.75];
-  for (let i = 0; i < 6; i++) {
-    const px = -13.4 + (i % 3) * 1.0;
-    const pz = -8.85 + Math.floor(i / 3) * 0.8;
-    box(0.46, 0.012, 0.62, i % 2 ? '#e9e4d8' : '#dcd5c6', px, 1.03, pz, paperRots[i]);
+  const paperRots = [0.2, -0.4, 0.7, -0.15];
+  for (let i = 0; i < 4; i++) {
+    box(0.4, 0.012, 0.54, i % 2 ? '#e9e4d8' : '#dcd5c6', -9.05 + (i % 2) * 0.7, 0.99, 17.95 + Math.floor(i / 2) * 0.55, paperRots[i]);
   }
   // Chips de la brand bar sobre la mesa.
   const brand = ['#f63f2f', '#fe720c', '#feca0d', '#7fc527', '#1f93e0'];
-  brand.forEach((c, i) => box(0.2, 0.016, 0.2, c, -13.35 + i * 0.27, 1.04, -7.78, 0.12));
+  brand.forEach((c, i) => box(0.16, 0.014, 0.16, c, -9.0 + i * 0.22, 1.0, 18.62, 0.12));
   // Laptop.
-  box(0.62, 0.045, 0.44, '#26262e', -11.5, 1.05, -8.75, -0.5);
-  const lap = new THREE.BoxGeometry(0.62, 0.42, 0.03);
-  lap.rotateX(-0.35); lap.rotateY(-0.5); lap.translate(-11.69, 1.26, -8.9);
+  box(0.5, 0.04, 0.36, '#26262e', -7.85, 1.0, 18.05, -0.4);
+  const lap = new THREE.BoxGeometry(0.5, 0.36, 0.03);
+  lap.rotateX(-0.35); lap.rotateY(-0.4); lap.translate(-8.0, 1.18, 17.92);
   push(lap, '#1b1b22');
-
-  /* ── Escritorio de EDICIÓN al borde ESTE de la pista ── */
-  box(2.9, 0.1, 1.35, '#4a4038', 12.4, 0.96, -9.5);
-  for (const [lx, lz] of [[-1.25, -0.55], [1.25, -0.55], [-1.25, 0.55], [1.25, 0.55]]) {
-    cyl(0.05, 0.06, 0.92, 6, '#2e2822', 12.4 + lx, 0.46, -9.5 + lz);
-  }
-  box(1.5, 0.92, 0.08, '#101016', 12.4, 1.78, -10.0, Math.PI); // marco monitor
-  cyl(0.06, 0.16, 0.32, 6, '#1c1c24', 12.4, 1.18, -9.95); // pie
-  // Silla del editor (mirando al norte, hacia el escritorio).
-  cyl(0.27, 0.31, 0.05, 8, '#101014', 12.4, 0.03, -8.5);
-  cyl(0.045, 0.05, 0.52, 6, '#15151a', 12.4, 0.3, -8.5);
-  box(0.52, 0.06, 0.5, '#1d1d23', 12.4, 0.59, -8.5);
-  box(0.5, 0.55, 0.06, '#1d1d23', 12.4, 0.95, -8.26);
-  // Tendedero de polaroids al costado.
-  cyl(0.035, 0.045, 2.6, 5, '#3c3c46', 15.3, 1.3, -7.6);
-  cyl(0.035, 0.045, 2.6, 5, '#3c3c46', 15.3, 1.3, -10.4);
-  const wire = new THREE.CylinderGeometry(0.012, 0.012, 2.8, 4);
-  wire.rotateX(Math.PI / 2); wire.translate(15.3, 2.52, -9.0);
-  push(wire, '#55555f');
-  for (let i = 0; i < 6; i++) {
-    box(0.23, 0.27, 0.012, '#e9e6dd', 15.3, 2.34, -7.8 - i * 0.48, Math.PI / 2 + (i % 2 ? 0.12 : -0.1));
-  }
+  // El escritorio de EDICIÓN ya no existe acá: el modelo del editor
+  // trae su propia mesa y PC.
 
   /* ── Set de FOTOGRAFÍA (utilería, rincón este) ── */
   const bdRy = -0.99;
@@ -210,19 +187,7 @@ export function buildWorld(scene) {
   box(0.36, 0.24, 0.3, '#16161c', 21.9, 1.45, -12.5, bdRy);
   cyl(0.07, 0.09, 0.16, 8, '#0c0c10', 21.9, 1.45, -12.32, 0, Math.PI / 2);
 
-  /* ── Cámara EN MANO del fotógrafo (que está entre la gente) ── */
-  box(0.3, 0.2, 0.16, '#16161c', 3.62, 1.08, -6.32, 0.4);
-  cyl(0.06, 0.08, 0.14, 8, '#0c0c10', 3.66, 1.08, -6.2, 0, Math.PI / 2);
-
-  /* ── Cámara de VIDEO en trípode, al borde de la pista ── */
-  const vRy = 2.474;
-  for (let l = 0; l < 3; l++) {
-    const a = (l / 3) * Math.PI * 2;
-    cyl(0.025, 0.035, 1.38, 5, '#33333b', -3.3 + Math.cos(a) * 0.32, 0.66, -4.8 + Math.sin(a) * 0.32, Math.cos(a) * 0.36, Math.sin(a) * 0.36);
-  }
-  box(0.42, 0.28, 0.55, '#16161c', -3.3, 1.48, -4.8, vRy);
-  cyl(0.07, 0.1, 0.2, 8, '#0c0c10', -3.3 + 0.22, 1.48, -4.8 - 0.28, 0, Math.PI / 2);
-  box(0.2, 0.14, 0.03, '#26262e', -3.3 - 0.3, 1.56, -4.8 + 0.18, vRy + 0.5);
+  // Las cámaras del fotógrafo y del filmmaker vienen en sus modelos GLB.
 
   /* ── Consola VJ junto a la cabina (VISUALES) ── */
   box(1.7, 0.08, 0.85, '#1d1d23', 4.6, 0.96, -17.6);

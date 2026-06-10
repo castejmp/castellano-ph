@@ -96,11 +96,11 @@ export const CONFIG = {
   // pantalla LED de fondo (desenfocada en desktop por el DoF).
   shots: [
     { pos: [45, 36, 45], look: [0, 0, 0], fov: 30 },                // 0 PLANO GENERAL (iso)
-    { pos: [-13.8, 2.4, -3.2], look: [-12.4, 1.2, -8.8], fov: 28 }, // 1 DISEÑO: oeste de la pista, LED detrás
+    { pos: [-6.0, 2.3, 23.8], look: [-8.6, 1.2, 18.9], fov: 30 },   // 1 DISEÑO: junto a la barra, la fiesta de fondo
     { pos: [5.6, 2.2, -0.8], look: [3.5, 1.25, -6.6], fov: 30 },    // 2 FOTOGRAFÍA: entre la gente, LED detrás
-    { pos: [-1.4, 2.0, 1.2], look: [-3.5, 1.4, -4.6], fov: 34 },    // 3 VIDEO: cámara + trípode, LED detrás
+    { pos: [-1.4, 2.0, 1.2], look: [-3.5, 1.4, -4.6], fov: 34 },    // 3 VIDEO: el filmmaker, LED detrás
     { pos: [4.8, 2.8, -12.0], look: [4.6, 1.8, -18.5], fov: 32 },   // 4 VISUALES: el VJ y la pantalla encima
-    { pos: [15.2, 2.4, -3.6], look: [12.5, 1.3, -8.6], fov: 28 },   // 5 EDICIÓN: este de la pista, LED detrás
+    { pos: [15.4, 2.4, -4.2], look: [12.4, 1.3, -8.8], fov: 28 },   // 5 EDICIÓN: este de la pista, LED detrás
     { pos: [17, 14.5, 15], look: [0, 9, -4], fov: 55 },             // 6 DRONE → POV del drone (path.js)
     { pos: [12, 4.5, 7], look: [-3, 4, -16], fov: 50 },             // 7 INMERSIVO
     { pos: [-45, 36, 45], look: [0, 1, 0], fov: 30 },               // 8 FINALMENTE (iso opuesto)
