@@ -9,10 +9,6 @@ dist-ssr
 *.log
 npm-debug.log*
 
-# Artefactos de tsc -b
-*.tsbuildinfo
-vite.config.js
-vite.config.d.ts
 .env
 .env.*
 !.env.example

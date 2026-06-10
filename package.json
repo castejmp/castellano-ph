@@ -1,31 +1,18 @@
 {
   "name": "castellano-ph",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
-  "description": "Castellano PH — estudio creativo de eventos. La luz se vuelve experiencia.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
-    "lint": "tsc --noEmit"
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "framer-motion": "^11.11.1",
-    "gsap": "^3.12.5",
-    "lenis": "^1.1.14",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "three": "^0.170.0"
   },
   "devDependencies": {
-    "@types/node": "^25.9.1",
-    "@types/react": "^18.3.11",
-    "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.3.2",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.14",
-    "typescript": "^5.6.3",
+    "playwright-core": "^1.60.0",
     "vite": "^5.4.9"
   }
 }
