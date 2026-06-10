@@ -10,23 +10,30 @@
  * Entrada:  scripts/raw/*.glb  (crudos de Tripo — NO van al repo)
  * Salida:   public/models/*.glb
  */
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync, mkdirSync } from 'node:fs';
 import { NodeIO } from '@gltf-transform/core';
-import { simplify, prune, textureCompress } from '@gltf-transform/functions';
-import { MeshoptSimplifier } from 'meshoptimizer';
+import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
+import { simplify, prune, textureCompress, meshopt } from '@gltf-transform/functions';
+import { MeshoptSimplifier, MeshoptEncoder, MeshoptDecoder } from 'meshoptimizer';
 import sharp from 'sharp';
+
+await MeshoptEncoder.ready;
+await MeshoptDecoder.ready;
 
 const FILES = [
   // 10 invitados bailando (ya procesado; se re-procesa si está el crudo).
   { src: 'scripts/raw/invitados.glb', out: 'public/models/invitados.glb', ratio: 0.3, clusters: null },
-  // CREW: 3 sueltos — [0] filmmaker · [1] fotógrafo de pie · [2] fotógrafo agachado.
-  // (la fila viene espejada: z ascendente = derecha→izquierda del render)
-  { src: 'scripts/raw/crew.glb', out: 'public/models/crew.glb', ratio: 0.25, clusters: null },
-  // STAFF: [0,1] = editores con su mesa (+ objeto en el piso) · [2] VJ · [3] diseñador.
-  { src: 'scripts/raw/staff.glb', out: 'public/models/staff.glb', ratio: 0.35, clusters: [[0, 1], [2], [3]] },
 ];
 
-const io = new NodeIO();
+// Figuras individuales (una persona por archivo): scripts/raw/people/*.glb
+// → public/models/people/*.glb. Crudas pesan ~29 MB; bajan a ~2 MB.
+const PEOPLE_DIR = 'scripts/raw/people';
+const PEOPLE_OUT = 'public/models/people';
+const PEOPLE_RATIO = 0.14;
+
+const io = new NodeIO()
+  .registerExtensions(ALL_EXTENSIONS)
+  .registerDependencies({ 'meshopt.decoder': MeshoptDecoder, 'meshopt.encoder': MeshoptEncoder });
 
 function splitPrimitive(doc, mesh, clusters) {
   const prim = mesh.listPrimitives()[0];
@@ -142,4 +149,24 @@ for (const { src, out, ratio, clusters } of FILES) {
   await io.write(out, doc);
   const { statSync } = await import('node:fs');
   console.log(`${src} → ${out}: ${n} figuras/grupos, ${(statSync(out).size / 1e6).toFixed(2)} MB`);
+}
+
+/* ── Figuras individuales: una persona por archivo ── */
+if (existsSync(PEOPLE_DIR)) {
+  mkdirSync(PEOPLE_OUT, { recursive: true });
+  const { statSync } = await import('node:fs');
+  for (const file of readdirSync(PEOPLE_DIR).filter((f) => f.endsWith('.glb'))) {
+    const doc = await io.read(`${PEOPLE_DIR}/${file}`);
+    await doc.transform(
+      simplify({ simplifier: MeshoptSimplifier, ratio: PEOPLE_RATIO, error: 0.004 }),
+      prune(),
+      textureCompress({ targetFormat: 'webp', encoder: sharp, resize: [1024, 1024] }),
+      // Compresión de geometría (EXT_meshopt_compression): el loader la
+      // decodifica con MeshoptDecoder. Achica la malla 4-6×.
+      meshopt({ encoder: MeshoptEncoder, level: 'high' })
+    );
+    const out = `${PEOPLE_OUT}/${file}`;
+    await io.write(out, doc);
+    console.log(`${file} → ${out}: ${(statSync(out).size / 1e6).toFixed(2)} MB`);
+  }
 }

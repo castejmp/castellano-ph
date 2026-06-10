@@ -7,10 +7,22 @@ import * as THREE from 'three';
  * texturas WebP. Acá solo se re-centran (xz al origen, pies en y=0) y
  * se ordenan según la fila original (eje z) = el orden de la referencia.
  */
-export async function loadPeopleGLB(url, onProgress) {
+let _decoder = null;
+async function makeLoader() {
   const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+  const loader = new GLTFLoader();
+  // Geometría comprimida con meshopt: hay que enchufar el decoder.
+  if (!_decoder) {
+    ({ MeshoptDecoder: _decoder } = await import('three/addons/libs/meshopt_decoder.module.js'));
+  }
+  loader.setMeshoptDecoder(_decoder);
+  return loader;
+}
+
+export async function loadPeopleGLB(url, onProgress) {
+  const loader = await makeLoader();
   const gltf = await new Promise((resolve, reject) => {
-    new GLTFLoader().load(
+    loader.load(
       url,
       resolve,
       (e) => { if (e.total) onProgress?.(e.loaded / e.total); },

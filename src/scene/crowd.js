@@ -42,6 +42,24 @@ export const STATION_SPOTS = {
 /* El piso transitable queda a y≈0.1 (pista + filo de la losa). */
 const FLOOR_Y = 0.1;
 
+/* ──────────────────────────────────────────────
+ * FIGURAS INDIVIDUALES — un archivo .glb = una persona.
+ * Para sumar una figura nueva: poné el .glb en scripts/raw/people/,
+ * corré `node scripts/optimize-people.mjs`, y agregá una línea acá.
+ *   file   → public/models/people/<file>
+ *   slot   → { x, z, face } en coordenadas del salón
+ *   height → altura objetivo en metros (default 1.7)
+ * Si el archivo no existe todavía, se saltea sin romper nada.
+ * ────────────────────────────────────────────── */
+const FIGURE_FILES = [
+  // FOTOGRAFÍA: dos fotógrafos al borde sur, apuntando a la pista.
+  { file: 'photographer.glb', slot: { x: 6.7, z: -1.3, face: -2.3 } },
+  { file: 'photographer-women.glb', slot: { x: 8.4, z: -1.8, face: -2.45 } },
+  // VIDEO: camarógrafo al borde oeste.
+  { file: 'cameraoperator.glb', slot: { x: -10.3, z: -6.5, face: 1.81 } },
+  // worker.glb y toy.glb: identidad a confirmar → se suman cuando se sepa.
+];
+
 export class Crowd {
   constructor(scene, isMobile = false) {
     this.scene = scene;
@@ -183,10 +201,12 @@ export class Crowd {
     const { loadPeopleGLB } = await import('./glbPeople.js');
     const prog = [0, 0, 0];
     const report = () => onProgress?.((prog[0] + prog[1] + prog[2]) / 3);
-    const [guests, crew, staff] = await Promise.all([
+    const [guests, staff, ...figs] = await Promise.all([
       loadPeopleGLB(`${base}models/invitados.glb`, (p) => { prog[0] = p; report(); }),
-      loadPeopleGLB(`${base}models/crew.glb`, (p) => { prog[1] = p; report(); }),
-      loadPeopleGLB(`${base}models/staff.glb`, (p) => { prog[2] = p; report(); }),
+      loadPeopleGLB(`${base}models/staff.glb`, (p) => { prog[1] = p; report(); }),
+      ...FIGURE_FILES.map((f) =>
+        loadPeopleGLB(`${base}models/people/${f.file}`, (p) => { prog[2] = p; report(); })
+          .catch(() => null)),
     ]);
 
     // La fila original mira a +x: girarla para que el `face` funcione.
@@ -216,28 +236,37 @@ export class Crowd {
       this._instanceGLB(fig.geometry, guests.material, perVariant[vi], false);
     });
 
-    /* ── Team: cada figura/grupo a su puesto ── */
-    // Escala por archivo: la figura más alta (de pie) define el 1.7.
-    const sCrew = 1.7 / Math.max(...crew.figures.map((f) => f.height));
-    const sStaff = 1.7 / Math.max(...staff.figures.map((f) => f.height));
-    const PLACE = [
-      // FOTOGRAFÍA: los DOS fotógrafos lado a lado apuntando a la pista.
-      { fig: crew.figures[1], mat: crew.material, s: sCrew, slot: { x: 6.7, z: -1.3, face: -2.3 } },      // de pie
-      { fig: crew.figures[2], mat: crew.material, s: sCrew, slot: { x: 8.4, z: -1.8, face: -2.45 } },     // agachado
-      { fig: crew.figures[0], mat: crew.material, s: sCrew, slot: { x: -10.3, z: -6.5, face: 1.81 } },    // VIDEO: filmmaker
-      { fig: staff.figures[0], mat: staff.material, s: sStaff, slot: { x: 8.6, z: 18.4, face: Math.PI } },// EDICIÓN: editores ×2 con su mesa
-      { fig: staff.figures[1], mat: staff.material, s: sStaff, slot: { x: 4.6, z: -18.4, face: 0 } },     // VISUALES: VJ
-      { fig: staff.figures[2], mat: staff.material, s: sStaff, slot: { x: -8.5, z: 19.35, face: Math.PI } }, // DISEÑO
-    ];
-    for (const { fig, mat, s, slot } of PLACE) {
-      if (!fig) continue;
+    /* ── Figuras individuales (un archivo = una persona) ── */
+    // Reemplazan al crew: cada una a su puesto, normalizada a su altura.
+    const offProc = new Set();
+    figs.forEach((g, i) => {
+      if (!g) return; // archivo no disponible todavía → lo salteamos
+      const { slot, height = 1.7, off } = FIGURE_FILES[i];
+      const fig = g.figures[0];
+      const s = height / fig.height;
       fig.geometry.scale(s, s, s);
       fig.geometry.rotateY(ROT);
-      this._instanceGLB(fig.geometry, mat, [slot], true);
+      this._instanceGLB(fig.geometry, g.material, [slot], true);
+      off?.forEach((o) => offProc.add(o));
+    });
+
+    /* ── Staff legacy (diseñador, VJ, editores ×2) — hasta que lleguen
+       sus archivos individuales ── */
+    const sStaff = 1.7 / Math.max(...staff.figures.map((f) => f.height));
+    const STAFF_PLACE = [
+      { fig: staff.figures[0], slot: { x: 8.6, z: 18.4, face: Math.PI } },  // EDICIÓN ×2
+      { fig: staff.figures[1], slot: { x: 4.6, z: -18.4, face: 0 } },       // VISUALES: VJ
+      { fig: staff.figures[2], slot: { x: -8.5, z: 19.35, face: Math.PI } },// DISEÑO
+    ];
+    for (const { fig, slot } of STAFF_PLACE) {
+      if (!fig) continue;
+      fig.geometry.scale(sStaff, sStaff, sStaff);
+      fig.geometry.rotateY(ROT);
+      this._instanceGLB(fig.geometry, staff.material, [slot], true);
     }
 
     // Apagar los operadores procedurales reemplazados (escala 0).
-    // groups.op = [diseño, foto, video, vj, dj, piloto] → quedan dj y piloto.
+    // groups.op = [diseño, foto, video, vj, dj, piloto].
     this._zeroInstances('op', [0, 1, 2, 3]);
     this._zeroInstances('opSeated', [0]);
   }
