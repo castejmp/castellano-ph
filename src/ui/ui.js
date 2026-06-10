@@ -6,7 +6,7 @@ import { CONFIG } from '../config.js';
  * dots laterales, una card por estación, flash y footer fijo.
  */
 export class UI {
-  constructor({ onModeChosen, onModeCycle, onDot }) {
+  constructor({ onModeChosen, onModeCycle, onDot, onToggleMute }) {
     const root = document.getElementById('ui');
     const S = CONFIG.stations;
 
@@ -25,12 +25,24 @@ export class UI {
       <div class="right mono">
         <span class="hud" data-hud>SHOT 01/09 · ${S[0].name}</span>
         <span class="clock" data-clock></span>
+        <button class="mute-btn" data-mute-btn type="button" aria-label="Silenciar" aria-pressed="false">
+          <span data-mute-icon>♪</span>
+        </button>
         <button class="mode-btn" data-mode-btn type="button">MODO</button>
       </div>`;
     this.hud = nav.querySelector('[data-hud]');
     this.clockEl = nav.querySelector('[data-clock]');
     this.modeBtn = nav.querySelector('[data-mode-btn]');
     this.modeBtn.addEventListener('click', onModeCycle);
+    this.muteBtn = nav.querySelector('[data-mute-btn]');
+    this.muteIcon = nav.querySelector('[data-mute-icon]');
+    this.muteBtn.addEventListener('click', () => {
+      const muted = onToggleMute();
+      this.muteBtn.setAttribute('aria-pressed', String(muted));
+      this.muteBtn.classList.toggle('muted', muted);
+      this.muteIcon.textContent = muted ? '✕' : '♪';
+      this.muteBtn.setAttribute('aria-label', muted ? 'Activar sonido' : 'Silenciar');
+    });
 
     /* Dots laterales */
     const dots = el('div', 'dots');

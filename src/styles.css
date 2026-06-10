@@ -60,6 +60,17 @@ button { font: inherit; cursor: pointer; }
   transition: border-color 0.3s, color 0.3s, box-shadow 0.3s;
 }
 .nav .mode-btn:hover { border-color: var(--accent); color: var(--accent); }
+.nav .mute-btn {
+  pointer-events: auto;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2rem; height: 2rem; flex: none;
+  background: transparent; color: var(--paper);
+  border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 999px;
+  font-size: 0.8rem; line-height: 1;
+  transition: border-color 0.3s, color 0.3s, opacity 0.3s;
+}
+.nav .mute-btn:hover { border-color: var(--accent); color: var(--accent); }
+.nav .mute-btn.muted { color: rgba(255, 255, 255, 0.4); border-color: rgba(255, 255, 255, 0.18); }
 .hud { opacity: 0.55; }
 @media (max-width: 720px) { .nav .clock, .hud { display: none; } }
 

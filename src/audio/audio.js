@@ -23,7 +23,7 @@ export class AudioEngine {
     if (this.ready) return;
     const ctx = (this.ctx = new (window.AudioContext || window.webkitAudioContext)());
     this.master = ctx.createGain();
-    this.master.gain.value = 0.8;
+    this.master.gain.value = this.muted ? 0 : 0.8;
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -16;
     comp.ratio.value = 5;
@@ -40,6 +40,13 @@ export class AudioEngine {
     this.trackGain.gain.value = 0;
     this.trackGain.connect(this.master);
     this.ready = true;
+  }
+
+  /** Silencia/activa el master con una rampa corta (sin clicks). */
+  setMuted(muted) {
+    this.muted = muted;
+    if (!this.ready) return;
+    this.master.gain.setTargetAtTime(muted ? 0 : 0.8, this.ctx.currentTime, 0.05);
   }
 
   setMode(name) {

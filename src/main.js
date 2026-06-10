@@ -54,6 +54,7 @@ if (!isMobile) {
 /* ── UI + gate ──────────────────────────────────── */
 let started = false;
 let modeIdx = 0;
+let muted = false;
 
 function applyMode(name) {
   modeIdx = CONFIG.modeOrder.indexOf(name);
@@ -74,6 +75,11 @@ const ui = new UI({
   },
   onDot(i) {
     scroll.goTo(i);
+  },
+  onToggleMute() {
+    muted = !muted;
+    audio.setMuted(muted);
+    return muted;
   },
 });
 
