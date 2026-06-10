@@ -64,12 +64,16 @@ export class CameraRig {
       if (stR >= 1 && stR <= 5) {
         const w = Math.max(0, 1 - Math.abs(f - stR) * 2.2);
         if (w > 0) {
-          const ang = t * 0.07 * w; // ~90 s por vuelta completa
+          // Paneo oscilante (±17°), SIN acumular ángulo: si el ángulo
+          // creciera con el tiempo, al salir de la estación el peso lo
+          // rebobinaría de golpe y la cámara temblequeaba/se perdía.
+          const ang = Math.sin(t * 0.18) * 0.3;
           const dx = this._tp.x - this._tl.x;
           const dz = this._tp.z - this._tl.z;
           const c = Math.cos(ang), s = Math.sin(ang);
-          this._tp.x = this._tl.x + dx * c - dz * s;
-          this._tp.z = this._tl.z + dx * s + dz * c;
+          // Mezcla por peso: entra y sale del paneo sin saltos.
+          this._tp.x += (this._tl.x + dx * c - dz * s - this._tp.x) * w;
+          this._tp.z += (this._tl.z + dx * s + dz * c - this._tp.z) * w;
 
           // Composición: el protagonista a un costado del cuadro, la
           // card al otro. Impares → card derecha, sujeto a la izquierda;
