@@ -220,8 +220,8 @@ export class Crowd {
 
     /* ── Team: figura i (orden de fila) → sus puestos ── */
     const TEAM_SLOTS = [
-      // [0] EDITORES ×2 junto a la barra, lado a lado (cada uno con su mesa y PC).
-      [{ x: 7.4, z: 18.4, face: Math.PI }, { x: 9.8, z: 18.4, face: Math.PI }],
+      // [0] EDITORES ×2 junto a la barra, pegados (cada uno con su mesa y PC).
+      [{ x: 7.95, z: 18.4, face: Math.PI }, { x: 9.25, z: 18.4, face: Math.PI }],
       [{ x: 4.6, z: -18.4, face: 0 }],            // [1] VJ en la consola
       [{ x: -8.5, z: 19.35, face: Math.PI }],     // [2] DISEÑADOR: junto a la barra
       [{ x: -10.3, z: -6.5, face: 1.81 }],        // [3] FILMMAKER: borde oeste, apuntando a la pista

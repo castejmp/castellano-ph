@@ -109,7 +109,7 @@ button { font: inherit; cursor: pointer; }
 
 /* ── Cards por estación ─────────────────────────── */
 .card {
-  position: fixed; bottom: 5.4rem; left: 1.4rem; z-index: 30;
+  position: fixed; bottom: 5.4rem; left: 14vw; z-index: 30;
   width: min(355px, calc(100vw - 4.5rem));
   padding: 1.15rem 1.3rem;
   background: rgba(8, 8, 11, 0.66);
@@ -121,7 +121,7 @@ button { font: inherit; cursor: pointer; }
   transition: opacity 0.45s, transform 0.45s;
   pointer-events: none;
 }
-.card.right { left: auto; right: 2.6rem; }
+.card.right { left: auto; right: 14vw; }
 .card.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
 .card .kicker { font-size: 0.6rem; letter-spacing: 0.26em; color: var(--accent); text-transform: uppercase; }
 .card h2 { margin: 0.45rem 0 0.55rem; font-size: 1.45rem; font-weight: 800; letter-spacing: 0.02em; }

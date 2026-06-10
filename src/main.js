@@ -157,7 +157,7 @@ function frame() {
   const immersiveW = Math.max(0, 1 - Math.abs(f - 7) * 1.4);
   led.update(t, bands, immersiveW, f, dt);
   extras.update(t, dt, bands, immersiveW, f);
-  cameraRig.update(scroll.progress, dt, extras.dronePos, reduced);
+  cameraRig.update(scroll.progress, dt, extras.dronePos, reduced, t);
   ui.setStation(f);
 
   // DoF de "jugador seleccionado": en las estaciones de operador el

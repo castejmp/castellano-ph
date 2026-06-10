@@ -30,9 +30,10 @@ export class CameraRig {
   }
 
   /**
-   * progress: 0..1 · dronePos: Vector3 (la estación DRONE lo persigue)
+   * progress: 0..1 · dronePos: Vector3 (la estación DRONE lo persigue) ·
+   * t: tiempo (paneo orbital en las estaciones de operador)
    */
-  update(progress, dt, dronePos, reduced) {
+  update(progress, dt, dronePos, reduced, t = 0) {
     const f = progress * this.max;
     const i = Math.min(Math.floor(f), this.max - 1);
     const u = f - i;
@@ -54,6 +55,21 @@ export class CameraRig {
     } else {
       this.posCurve.getPoint(progress, this._tp);
       this.lookCurve.getPoint(progress, this._tl);
+
+      // Paneo lento en órbita alrededor del "jugador seleccionado"
+      // (estaciones de operador; la 6 ya orbita con el drone).
+      const stR = Math.round(f);
+      if (stR >= 1 && stR <= 5) {
+        const w = Math.max(0, 1 - Math.abs(f - stR) * 2.2);
+        if (w > 0) {
+          const ang = t * 0.07 * w; // ~90 s por vuelta completa
+          const dx = this._tp.x - this._tl.x;
+          const dz = this._tp.z - this._tl.z;
+          const c = Math.cos(ang), s = Math.sin(ang);
+          this._tp.x = this._tl.x + dx * c - dz * s;
+          this._tp.z = this._tl.z + dx * s + dz * c;
+        }
+      }
 
       // Estación DRONE → POV: la cámara SE SUBE al drone y mira la fiesta.
       if (dronePos) {

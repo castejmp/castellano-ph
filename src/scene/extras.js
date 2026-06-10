@@ -52,17 +52,20 @@ export class Extras {
   constructor(scene) {
     this.scene = scene;
 
-    /* ── Neón "castellano" acostado al este de la pista, mirando arriba ── */
+    /* ── Neones "castellano" a ambos lados de la pista, mirando arriba ── */
     const neon = ANCHORS.neon;
     this.neonMat = new THREE.MeshBasicMaterial({
       map: neonTexture('castellano'), transparent: true, depthWrite: false,
     });
-    const neonMesh = new THREE.Mesh(new THREE.PlaneGeometry(...neon.size), this.neonMat);
-    neonMesh.position.set(...neon.pos);
-    neonMesh.rotation.set(-Math.PI / 2, 0, -Math.PI / 2); // plano al piso, texto a lo largo de la pista
-    neonMesh.matrixAutoUpdate = false;
-    neonMesh.updateMatrix();
-    scene.add(neonMesh);
+    const neonGeo = new THREE.PlaneGeometry(...neon.size);
+    for (const spot of neon.spots) {
+      const m = new THREE.Mesh(neonGeo, this.neonMat);
+      m.position.set(...spot.pos);
+      m.rotation.set(-Math.PI / 2, 0, spot.rz); // al piso, legible desde afuera
+      m.matrixAutoUpdate = false;
+      m.updateMatrix();
+      scene.add(m);
+    }
 
     /* ── Parrilla: beams de cabezales móviles ── */
     this.beamMat = new THREE.MeshBasicMaterial({

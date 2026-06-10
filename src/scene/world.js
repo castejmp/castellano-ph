@@ -34,9 +34,16 @@ export const ANCHORS = {
     washes: [[-5, 5.72, -19], [-2.5, 5.72, -19], [0, 5.72, -19], [2.5, 5.72, -19], [5, 5.72, -19]],
     strobes: [[-1.6, 5.6, -19], [1.6, 5.6, -19]],
   },
-  // Neón acostado al lado ESTE de la pista, mirando al cielo (detalle
-  // gaming). y=0.13: SOBRE el filo de la losa (0.09), si no queda enterrado.
-  neon: { pos: [10.45, 0.13, -9], size: [7, 1.5] },
+  // Neones acostados a AMBOS lados de la pista, mirando al cielo
+  // (detalle gaming). Invertidos 180° entre sí: cada uno se lee desde
+  // AFUERA de la pista. y=0.13: sobre el filo de la losa (0.09).
+  neon: {
+    size: [7, 1.5],
+    spots: [
+      { pos: [10.45, 0.13, -9], rz: Math.PI / 2 },   // este: se lee desde el este
+      { pos: [-10.45, 0.13, -9], rz: -Math.PI / 2 }, // oeste: se lee desde el oeste
+    ],
+  },
   droneCenter: [0, 9.5, -4],
 };
 
