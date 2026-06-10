@@ -35,7 +35,8 @@ export const ANCHORS = {
     washes: [[-5, 5.72, -19], [-2.5, 5.72, -19], [0, 5.72, -19], [2.5, 5.72, -19], [5, 5.72, -19]],
     strobes: [[-1.6, 5.6, -19], [1.6, 5.6, -19]],
   },
-  neon: { pos: [0, 1.15, -2.32], size: [7, 1.5] },
+  // Neón acostado al lado ESTE de la pista, mirando al cielo (detalle gaming).
+  neon: { pos: [10.45, 0.05, -9], size: [7, 1.5] },
   droneCenter: [0, 9.5, -4],
 };
 

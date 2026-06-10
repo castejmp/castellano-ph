@@ -52,24 +52,17 @@ export class Extras {
   constructor(scene) {
     this.scene = scene;
 
-    /* ── Neón "castellano" al borde sur de la pista ── */
+    /* ── Neón "castellano" acostado al este de la pista, mirando arriba ── */
     const neon = ANCHORS.neon;
     this.neonMat = new THREE.MeshBasicMaterial({
       map: neonTexture('castellano'), transparent: true, depthWrite: false,
     });
     const neonMesh = new THREE.Mesh(new THREE.PlaneGeometry(...neon.size), this.neonMat);
     neonMesh.position.set(...neon.pos);
+    neonMesh.rotation.set(-Math.PI / 2, 0, -Math.PI / 2); // plano al piso, texto a lo largo de la pista
     neonMesh.matrixAutoUpdate = false;
     neonMesh.updateMatrix();
     scene.add(neonMesh);
-    // Patitas del cartel.
-    const legGeo = mergeGeometries([
-      new THREE.CylinderGeometry(0.03, 0.04, 0.5, 5).translate(neon.pos[0] - 2.6, 0.25, neon.pos[2]).toNonIndexed(),
-      new THREE.CylinderGeometry(0.03, 0.04, 0.5, 5).translate(neon.pos[0] + 2.6, 0.25, neon.pos[2]).toNonIndexed(),
-    ]);
-    const legs = new THREE.Mesh(legGeo, new THREE.MeshLambertMaterial({ color: '#3c3c46' }));
-    legs.matrixAutoUpdate = false;
-    scene.add(legs);
 
     /* ── Parrilla: beams de cabezales móviles ── */
     this.beamMat = new THREE.MeshBasicMaterial({
@@ -118,16 +111,16 @@ export class Extras {
     this.strobeE = 0;
     this._strobeCd = 0;
 
-    /* ── Spotlight "jugador seleccionado" ── */
-    this.spot = new THREE.SpotLight('#ffffff', 0, 20, 0.3, 0.5, 1.4);
+    /* ── Spotlight "jugador seleccionado" — suave, y el haz llega al piso ── */
+    this.spot = new THREE.SpotLight('#ffffff', 0, 20, 0.34, 0.9, 1.4);
     this.spot.position.set(0, 6.6, -9);
     scene.add(this.spot, this.spot.target);
     this.spotConeMat = new THREE.MeshBasicMaterial({
       color: '#ffffff', transparent: true, opacity: 0,
       blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
     });
-    const spotConeGeo = new THREE.ConeGeometry(0.9, 5.6, 12, 1, true);
-    spotConeGeo.translate(0, -2.8, 0);
+    const spotConeGeo = new THREE.ConeGeometry(1.05, 6.7, 12, 1, true);
+    spotConeGeo.translate(0, -3.35, 0); // del cabezal hasta el piso
     this.spotCone = new THREE.Mesh(spotConeGeo, this.spotConeMat);
     this.spotCone.position.copy(this.spot.position);
     scene.add(this.spotCone);
@@ -294,8 +287,8 @@ export class Extras {
       this.spot.target.position.set(sp[0], 1, sp[1]);
       this.spotCone.position.set(sp[0], 6.6, sp[1]);
     }
-    this.spot.intensity = 520 * w;
-    this.spotConeMat.opacity = 0.1 * w;
+    this.spot.intensity = 240 * w;
+    this.spotConeMat.opacity = 0.05 * w;
     this.spotCone.visible = w > 0.02;
 
     // Neón: respira apenas con los medios.
