@@ -77,9 +77,7 @@ export class ThemeEngine {
     mu.uA.value.copy(L.led0);
     mu.uB.value.copy(L.led1);
 
-    this.extras.particleMat.color.copy(L.particles);
-    this.extras.particleMat.opacity = L.particleOpacity;
-    this.extras.festoon.material.color.copy(L.practical).multiplyScalar(1.6);
+    this.extras.applyTheme(L);
   }
 
   get crowdEnergy() {

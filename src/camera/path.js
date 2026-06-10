@@ -45,17 +45,25 @@ export class CameraRig {
       const r = Math.round(f);
       this.pos.fromArray(this.shots[r].pos);
       this.look.fromArray(this.shots[r].look);
-      if (this.shots[r].track === 'drone' && dronePos) this.look.copy(dronePos);
       this.fov = this.shots[r].fov;
+      if (r === 6 && dronePos) {
+        // POV del drone también en reduced-motion (es un corte).
+        this.pos.copy(dronePos).y += 0.25;
+        this.look.set(0, 1.2, -9);
+      }
     } else {
       this.posCurve.getPoint(progress, this._tp);
       this.lookCurve.getPoint(progress, this._tl);
 
-      // Estación DRONE: el lookAt persigue al drone y después suelta.
-      const droneIdx = this.shots.findIndex((s) => s.track === 'drone');
-      if (droneIdx >= 0 && dronePos) {
-        const w = Math.max(0, 1 - Math.abs(f - droneIdx) * 1.5);
-        this._tl.lerp(dronePos, w * 0.85);
+      // Estación DRONE → POV: la cámara SE SUBE al drone y mira la fiesta.
+      if (dronePos) {
+        const w = Math.max(0, 1 - Math.abs(f - 6) * 1.4);
+        if (w > 0) {
+          this._pov ??= new THREE.Vector3();
+          this._pov.copy(dronePos).y += 0.25;
+          this._tp.lerp(this._pov, w);
+          this._tl.lerp(this._party ??= new THREE.Vector3(0, 1.2, -9), w);
+        }
       }
 
       const k = 1 - Math.exp(-dt * 3.4);

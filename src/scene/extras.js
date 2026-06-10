@@ -1,14 +1,16 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { ANCHORS } from './world.js';
+import { STATION_SPOTS } from './crowd.js';
 
 /**
  * LOS MOMENTOS — todo lo que se mueve o emite luz propia:
- * festón sobre la pista, drone en loop, flash real del set de fotos,
- * pantalla de edición, superficies de mapping y haze de partículas.
+ * el neón "castellano" al borde de la pista, la parrilla de luces
+ * (beams de cabezales, washes, strobos), el spotlight de "jugador
+ * seleccionado" sobre el operador activo, el drone, el flash real,
+ * la pantalla de edición, el mapping y el haze.
  */
 
-/* Shader compartido del mapping: versión gruesa del LED, con opacidad. */
 const MAP_FRAG = /* glsl */ `
   uniform float uTime, uBass, uMid, uOpacity;
   uniform vec3 uA, uB;
@@ -29,29 +31,106 @@ const MAP_VERT = /* glsl */ `
   void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
 `;
 
+/** Texto blanco sobre canvas transparente → textura para el neón. */
+function neonTexture(text) {
+  const cnv = document.createElement('canvas');
+  cnv.width = 1024; cnv.height = 224;
+  const c = cnv.getContext('2d');
+  c.font = '900 150px system-ui, -apple-system, Arial, sans-serif';
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.shadowColor = 'rgba(255,255,255,0.9)';
+  c.shadowBlur = 26;
+  c.fillStyle = '#ffffff';
+  c.fillText(text, 512, 118);
+  const tex = new THREE.CanvasTexture(cnv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
 export class Extras {
   constructor(scene) {
     this.scene = scene;
 
-    /* ── Festón de luces sobre la pista (1 draw call, color por modo) ── */
-    const bulbs = [];
-    const poles = ANCHORS.festoonPoles;
-    const pairs = [ [poles[0], poles[3]], [poles[1], poles[2]] ];
-    for (const [a, b] of pairs) {
-      for (let i = 0; i <= 18; i++) {
-        const u = i / 18;
-        const x = a[0] + (b[0] - a[0]) * u;
-        const z = a[2] + (b[2] - a[2]) * u;
-        const y = a[1] - Math.sin(u * Math.PI) * 0.85; // caída de catenaria
-        bulbs.push(new THREE.SphereGeometry(0.07, 5, 4).translate(x, y, z).toNonIndexed());
-      }
+    /* ── Neón "castellano" al borde sur de la pista ── */
+    const neon = ANCHORS.neon;
+    this.neonMat = new THREE.MeshBasicMaterial({
+      map: neonTexture('castellano'), transparent: true, depthWrite: false,
+    });
+    const neonMesh = new THREE.Mesh(new THREE.PlaneGeometry(...neon.size), this.neonMat);
+    neonMesh.position.set(...neon.pos);
+    neonMesh.matrixAutoUpdate = false;
+    neonMesh.updateMatrix();
+    scene.add(neonMesh);
+    // Patitas del cartel.
+    const legGeo = mergeGeometries([
+      new THREE.CylinderGeometry(0.03, 0.04, 0.5, 5).translate(neon.pos[0] - 2.6, 0.25, neon.pos[2]).toNonIndexed(),
+      new THREE.CylinderGeometry(0.03, 0.04, 0.5, 5).translate(neon.pos[0] + 2.6, 0.25, neon.pos[2]).toNonIndexed(),
+    ]);
+    const legs = new THREE.Mesh(legGeo, new THREE.MeshLambertMaterial({ color: '#3c3c46' }));
+    legs.matrixAutoUpdate = false;
+    scene.add(legs);
+
+    /* ── Parrilla: beams de cabezales móviles ── */
+    this.beamMat = new THREE.MeshBasicMaterial({
+      color: '#ff2b2b', transparent: true, opacity: 0,
+      blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+    });
+    const beamGeo = new THREE.ConeGeometry(1.35, 7.5, 10, 1, true);
+    beamGeo.translate(0, -3.75, 0); // pivote en el cabezal
+    this.beams = ANCHORS.rig.heads.map((p, i) => {
+      const g = new THREE.Group();
+      g.position.set(p[0], p[1], p[2]);
+      const cone = new THREE.Mesh(beamGeo, this.beamMat);
+      g.add(cone);
+      g.userData.i = i;
+      this.scene.add(g);
+      return g;
+    });
+
+    /* ── Washes: lentes que pulsan con el bajo ── */
+    this.washMat = new THREE.MeshBasicMaterial({
+      color: '#ff3355', transparent: true, opacity: 0,
+      blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+    });
+    const washGeo = new THREE.CircleGeometry(0.17, 10);
+    for (const [wx, wy, wz] of ANCHORS.rig.washes) {
+      const lens = new THREE.Mesh(washGeo, this.washMat);
+      lens.position.set(wx, wy - 0.16, wz + 0.12);
+      lens.rotation.x = -Math.PI / 2 + 0.9;
+      lens.matrixAutoUpdate = false;
+      lens.updateMatrix();
+      scene.add(lens);
     }
-    this.festoon = new THREE.Mesh(
-      mergeGeometries(bulbs),
-      new THREE.MeshBasicMaterial({ color: '#ffd9a0' })
-    );
-    this.festoon.matrixAutoUpdate = false;
-    scene.add(this.festoon);
+
+    /* ── Strobos: barras blancas que destellan con los agudos ── */
+    this.strobeMat = new THREE.MeshBasicMaterial({
+      color: '#ffffff', transparent: true, opacity: 0,
+      blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+    });
+    for (const [sx, sy, sz] of ANCHORS.rig.strobes) {
+      const bar = new THREE.Mesh(new THREE.PlaneGeometry(1.26, 0.09), this.strobeMat);
+      bar.position.set(sx, sy - 0.07, sz + 0.08);
+      bar.matrixAutoUpdate = false;
+      bar.updateMatrix();
+      scene.add(bar);
+    }
+    this.strobeE = 0;
+    this._strobeCd = 0;
+
+    /* ── Spotlight "jugador seleccionado" ── */
+    this.spot = new THREE.SpotLight('#ffffff', 0, 20, 0.3, 0.5, 1.4);
+    this.spot.position.set(0, 6.6, -9);
+    scene.add(this.spot, this.spot.target);
+    this.spotConeMat = new THREE.MeshBasicMaterial({
+      color: '#ffffff', transparent: true, opacity: 0,
+      blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
+    });
+    const spotConeGeo = new THREE.ConeGeometry(0.9, 5.6, 12, 1, true);
+    spotConeGeo.translate(0, -2.8, 0);
+    this.spotCone = new THREE.Mesh(spotConeGeo, this.spotConeMat);
+    this.spotCone.position.copy(this.spot.position);
+    scene.add(this.spotCone);
 
     /* ── Drone en loop ── */
     const droneParts = [
@@ -70,7 +149,7 @@ export class Extras {
     this.dronePos = new THREE.Vector3();
     scene.add(this.drone);
 
-    /* ── Flash real del set de fotos ── */
+    /* ── Flash real (donde está el fotógrafo, entre la gente) ── */
     this.flash = new THREE.PointLight('#ffffff', 0, 40, 1.6);
     this.flash.position.set(...ANCHORS.flashAt);
     scene.add(this.flash);
@@ -81,7 +160,7 @@ export class Extras {
     cnv.width = 256; cnv.height = 160;
     const c2 = cnv.getContext('2d');
     c2.fillStyle = '#101014'; c2.fillRect(0, 0, 256, 160);
-    c2.fillStyle = '#1c1c24'; c2.fillRect(0, 96, 256, 64); // zona timeline
+    c2.fillStyle = '#1c1c24'; c2.fillRect(0, 96, 256, 64);
     const clipCols = ['#f63f2f', '#fe720c', '#feca0d', '#7fc527', '#1f93e0'];
     let cx = 6;
     for (let i = 0; i < 9; i++) {
@@ -90,10 +169,10 @@ export class Extras {
       c2.fillRect(cx, 104 + (i % 3) * 18, w, 12);
       cx += w + 4;
     }
-    c2.fillStyle = '#2e2e3a'; c2.fillRect(8, 8, 150, 80); // visor
-    c2.fillStyle = '#e9e6dd'; c2.fillRect(168, 8, 80, 36); // panel
+    c2.fillStyle = '#2e2e3a'; c2.fillRect(8, 8, 150, 80);
+    c2.fillStyle = '#e9e6dd'; c2.fillRect(168, 8, 80, 36);
     c2.fillStyle = '#55555f'; c2.fillRect(168, 52, 80, 36);
-    c2.fillStyle = '#fff'; c2.fillRect(127, 96, 2, 64); // playhead
+    c2.fillStyle = '#fff'; c2.fillRect(127, 96, 2, 64);
     const tex = new THREE.CanvasTexture(cnv);
     tex.colorSpace = THREE.SRGBColorSpace;
     const es = ANCHORS.editScreen;
@@ -154,11 +233,20 @@ export class Extras {
     this.flashEnergy = 1;
   }
 
+  /** Llamado por el ThemeEngine con el estado interpolado del modo. */
+  applyTheme(L) {
+    this.particleMat.color.copy(L.particles);
+    this.particleMat.opacity = L.particleOpacity;
+    this.beamMat.color.copy(L.led0);
+    this.washMat.color.copy(L.key);
+  }
+
   /**
-   * t: tiempo · bands: {bass,mid,treb} · immersiveW: peso estación 7 (0..1)
+   * t/dt: tiempo · bands · immersiveW: peso estación 7 ·
+   * stationFloat: para el spotlight de jugador seleccionado.
    */
-  update(t, dt, bands, immersiveW) {
-    // Drone: órbita con deriva vertical; siempre vuela, la cámara lo busca en la 6.
+  update(t, dt, bands, immersiveW, stationFloat = 0) {
+    // Drone: órbita con deriva vertical.
     const dc = ANCHORS.droneCenter;
     const a = t * 0.42;
     this.dronePos.set(
@@ -168,18 +256,52 @@ export class Extras {
     );
     this.drone.position.copy(this.dronePos);
     this.drone.rotation.y = -a + Math.PI / 2;
-    this.drone.rotation.z = Math.sin(t * 0.42) * 0.12; // banking
-    this.droneLight.intensity = 2 + ((t * 2) % 1 > 0.5 ? 3 : 0); // baliza
+    this.drone.rotation.z = Math.sin(t * 0.42) * 0.12;
+    this.droneLight.intensity = 2 + ((t * 2) % 1 > 0.5 ? 3 : 0);
 
-    // Flash: pico inmediato, decaimiento rápido.
+    // Flash del fotógrafo.
     if (this.flashEnergy > 0.001) {
       this.flash.intensity = this.flashEnergy * 1600;
-      this.flashEnergy *= Math.pow(0.000001, dt); // ~300 ms de cola
+      this.flashEnergy *= Math.pow(0.000001, dt);
     } else {
       this.flash.intensity = 0;
     }
 
-    // Mapping: solo visible cuando INMERSIVO pesa (ahorra fill-rate).
+    // Beams de cabezales: barren la pista a distintas velocidades.
+    this.beamMat.opacity = 0.05 + bands.bass * 0.13 + immersiveW * 0.06;
+    for (const g of this.beams) {
+      const i = g.userData.i;
+      g.rotation.z = Math.sin(t * (0.55 + i * 0.13) + i * 1.7) * 0.55;
+      g.rotation.x = -0.25 + Math.sin(t * 0.4 + i * 2.3) * 0.35;
+    }
+
+    // Washes pulsan con el bajo; strobos destellan con picos de agudos.
+    this.washMat.opacity = 0.25 + bands.bass * 0.7;
+    this._strobeCd -= dt;
+    if (bands.treb > 0.72 && this._strobeCd <= 0) {
+      this.strobeE = 1;
+      this._strobeCd = 0.22;
+    }
+    this.strobeE *= Math.pow(0.000001, dt);
+    this.strobeMat.opacity = this.strobeE;
+
+    // Spotlight "jugador seleccionado": solo en estaciones con operador.
+    const st = Math.round(stationFloat);
+    const sp = STATION_SPOTS[st];
+    const w = sp ? Math.max(0, 1 - Math.abs(stationFloat - st) * 2.2) : 0;
+    if (sp) {
+      this.spot.position.set(sp[0], 6.6, sp[1]);
+      this.spot.target.position.set(sp[0], 1, sp[1]);
+      this.spotCone.position.set(sp[0], 6.6, sp[1]);
+    }
+    this.spot.intensity = 520 * w;
+    this.spotConeMat.opacity = 0.1 * w;
+    this.spotCone.visible = w > 0.02;
+
+    // Neón: respira apenas con los medios.
+    this.neonMat.opacity = 0.82 + bands.mid * 0.18;
+
+    // Mapping.
     const mu = this.mapUniforms;
     mu.uTime.value = t;
     mu.uBass.value = bands.bass;
@@ -188,7 +310,7 @@ export class Extras {
     const visible = mu.uOpacity.value > 0.02;
     for (const p of this.mapPanels) p.visible = visible;
 
-    // Haze: deriva lenta + pulso con agudos.
+    // Haze.
     this.particles.rotation.y = t * 0.011;
     this.particleMat.size = 0.16 * (1 + bands.treb * 0.9);
   }

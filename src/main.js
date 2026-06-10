@@ -149,8 +149,9 @@ function frame() {
   themes.update(dt);
   rig.update(bands);
   crowd.update(t, bands.bass, themes.crowdEnergy);
-  led.update(t, bands, Math.max(0, 1 - Math.abs(f - 7) * 1.4));
-  extras.update(t, dt, bands, Math.max(0, 1 - Math.abs(f - 7) * 1.4));
+  const immersiveW = Math.max(0, 1 - Math.abs(f - 7) * 1.4);
+  led.update(t, bands, immersiveW, f, dt);
+  extras.update(t, dt, bands, immersiveW, f);
   cameraRig.update(scroll.progress, dt, extras.dronePos, reduced);
   ui.setStation(f);
 
