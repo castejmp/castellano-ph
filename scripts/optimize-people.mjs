@@ -144,7 +144,8 @@ for (const { src, out, ratio, clusters } of FILES) {
   await doc.transform(
     simplify({ simplifier: MeshoptSimplifier, ratio, error: 0.005 }),
     prune(),
-    textureCompress({ targetFormat: 'webp', encoder: sharp })
+    textureCompress({ targetFormat: 'webp', encoder: sharp, resize: [1024, 1024] }),
+    meshopt({ encoder: MeshoptEncoder, level: 'high' })
   );
   await io.write(out, doc);
   const { statSync } = await import('node:fs');

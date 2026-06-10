@@ -57,6 +57,8 @@ const FIGURE_FILES = [
   { file: 'photographer-women.glb', slot: { x: 8.4, z: -1.8, face: -2.45 } },
   // VIDEO: camarógrafo al borde oeste.
   { file: 'cameraoperator.glb', slot: { x: -10.3, z: -6.5, face: 1.81 } },
+  // EDICIÓN: los dos editores con su mesa (un bloque), junto a la barra.
+  { file: 'editores.glb', slot: { x: 8.6, z: 18.4, face: Math.PI }, height: 1.5 },
   // worker.glb y toy.glb: identidad a confirmar → se suman cuando se sepa.
 ];
 
@@ -74,22 +76,20 @@ export class Crowd {
       groups[kind].push({ x, z, dance, s, face });
     };
 
-    // Pista: bailan alrededor del centro (muchos con los brazos arriba).
-    for (let i = 0; i < 86; i++) {
-      const a = Math.random() * Math.PI * 2;
-      const r = Math.sqrt(Math.random());
-      addGuest(Math.cos(a) * r * 8, -9 + Math.sin(a) * r * 5.4, 1, 1, undefined, true);
+    // SOLO 10 personas, en la pista. Dispuestas en dos arcos para que
+    // se lean despejadas (no amontonadas), mirando hacia el DJ/LED.
+    const PISTA = [];
+    for (let i = 0; i < 10; i++) {
+      const inner = i < 5;
+      const k = inner ? i : i - 5;
+      const a = (k / 5 - 0.5) * 1.7;          // abanico
+      const r = inner ? 3.4 : 5.6;            // dos filas
+      const x = Math.sin(a) * r;
+      const z = -9 - Math.cos(a) * r * 0.7;   // hacia el norte (DJ)
+      PISTA.push({ x, z, dance: 1, s: 1, face: Math.atan2(-19.4 - z, 0 - x) - Math.PI / 2 });
+      addGuest(x, z, 1, 1, PISTA[i].face, true);
     }
-    // Alrededor de las mesas (de pie, charlando).
-    for (const [tx, tz] of TABLES) {
-      for (let c = 0; c < 5; c++) {
-        const a = (c / 5) * Math.PI * 2 + tx;
-        addGuest(tx + Math.cos(a) * 1.9, tz + Math.sin(a) * 1.9, 0.22, 0.96, a + Math.PI);
-      }
-    }
-    // Barra y lounge.
-    for (let i = 0; i < 6; i++) addGuest(-3.4 + i * 1.35, 18.4, 0.3, 1, 0);
-    for (let i = 0; i < 4; i++) addGuest(16.6 + i * 1.1, 13.6 + (i % 2) * 1.6, 0.15, 0.96);
+    this._pistaSpots = PISTA;
 
     // El elenco.
     for (const c of CAST) groups[c.kind].push(c);
@@ -227,13 +227,15 @@ export class Crowd {
       delete this.byKind[kind];
     }
 
+    // 10 invitados, 1:1 con los 10 lugares de la pista (sin repetir).
     const gScale = 1.6 / median(guests.figures.map((f) => f.height));
-    const perVariant = guests.figures.map(() => []);
-    guestSpots.forEach((p, i) => perVariant[i % guests.figures.length].push(p));
-    guests.figures.forEach((fig, vi) => {
+    const spots10 = this._pistaSpots ?? guestSpots;
+    guests.figures.forEach((fig, i) => {
+      const slot = spots10[i % spots10.length];
+      if (!slot) return;
       fig.geometry.scale(gScale, gScale, gScale);
       fig.geometry.rotateY(ROT);
-      this._instanceGLB(fig.geometry, guests.material, perVariant[vi], false);
+      this._instanceGLB(fig.geometry, guests.material, [slot], false);
     });
 
     /* ── Figuras individuales (un archivo = una persona) ── */
@@ -250,11 +252,10 @@ export class Crowd {
       off?.forEach((o) => offProc.add(o));
     });
 
-    /* ── Staff legacy (diseñador, VJ, editores ×2) — hasta que lleguen
-       sus archivos individuales ── */
+    /* ── Staff legacy (diseñador, VJ) — hasta que lleguen como
+       archivos individuales. Los editores ya vienen en editores.glb ── */
     const sStaff = 1.7 / Math.max(...staff.figures.map((f) => f.height));
     const STAFF_PLACE = [
-      { fig: staff.figures[0], slot: { x: 8.6, z: 18.4, face: Math.PI } },  // EDICIÓN ×2
       { fig: staff.figures[1], slot: { x: 4.6, z: -18.4, face: 0 } },       // VISUALES: VJ
       { fig: staff.figures[2], slot: { x: -8.5, z: 19.35, face: Math.PI } },// DISEÑO
     ];
