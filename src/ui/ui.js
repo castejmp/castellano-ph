@@ -62,7 +62,10 @@ export class UI {
         <h2>${st.name}</h2>
         <p>${st.body}</p>
         ${st.items.length ? `<ul>${st.items.map((it) => `<li>${it}</li>`).join('')}</ul>` : ''}
-        ${st.cta ? `<a class="cta" href="${CONFIG.whatsapp}" target="_blank" rel="noopener">${st.cta} →</a>` : ''}`;
+        ${st.cta ? `
+          <a class="cta" href="${CONFIG.whatsapp}" target="_blank" rel="noopener">${st.cta} →</a>
+          <a class="cta-ig mono" href="${CONFIG.instagram}" target="_blank" rel="noopener">${CONFIG.instagramLabel}</a>
+        ` : ''}`;
       return c;
     });
     // La estación 0 usa el hero, no card.
