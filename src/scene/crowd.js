@@ -40,7 +40,10 @@ export const STATION_SPOTS = {
 };
 
 export class Crowd {
-  constructor(scene) {
+  constructor(scene, isMobile = false) {
+    this.scene = scene;
+    this.isMobile = isMobile;
+    this.byKind = {};
     // Repartir el público en las siluetas (con variante bailando).
     const groups = { guestM: [], guestMDance: [], guestF: [], guestFDance: [], op: [], opSeated: [] };
 
@@ -86,7 +89,11 @@ export class Crowd {
   }
 
   _material(vertexColors) {
-    const mat = new THREE.MeshLambertMaterial({ color: 0xffffff, vertexColors });
+    return this._patch(new THREE.MeshLambertMaterial({ color: 0xffffff, vertexColors }));
+  }
+
+  /** Inyecta el baile (sway + saltito) en cualquier material. */
+  _patch(mat) {
     mat.onBeforeCompile = (sh) => {
       sh.uniforms.uTime = this.uni.uTime;
       sh.uniforms.uEnergy = this.uni.uEnergy;
@@ -158,6 +165,115 @@ export class Crowd {
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
       scene.add(mesh);
       this.meshes.push(mesh);
+      (this.byKind[kind] ??= { meshes: [], spots }).meshes.push(mesh);
+    }
+  }
+
+  /* ──────────────────────────────────────────────
+   * UPGRADE A GLB — los modelos reales del estudio.
+   * Invitados (10 poses de baile) reemplazan al público; el team
+   * (fotógrafo, filmmaker, diseñador, VJ, editor) a los operadores.
+   * El DJ y el piloto de drone siguen procedurales.
+   * ────────────────────────────────────────────── */
+  async upgradeFromGLB(base, onProgress) {
+    const { loadPeopleGLB } = await import('./glbPeople.js');
+    const prog = [0, 0];
+    const report = () => onProgress?.((prog[0] + prog[1]) / 2);
+    const [guests, team] = await Promise.all([
+      loadPeopleGLB(`${base}models/invitados.glb`, (p) => { prog[0] = p; report(); }),
+      loadPeopleGLB(`${base}models/team.glb`, (p) => { prog[1] = p; report(); }),
+    ]);
+
+    // La fila original mira a +x: girarla para que el `face` funcione.
+    const ROT = -Math.PI / 2;
+    const median = (arr) => arr.slice().sort((a, b) => a - b)[(arr.length / 2) | 0];
+
+    /* ── Invitados: fuera el público procedural ── */
+    const guestSpots = [];
+    for (const kind of ['guestM', 'guestMDance', 'guestF', 'guestFDance']) {
+      const gk = this.byKind[kind];
+      if (!gk) continue;
+      guestSpots.push(...gk.spots);
+      for (const m of gk.meshes) {
+        this.scene.remove(m);
+        m.geometry.dispose();
+      }
+      this.meshes = this.meshes.filter((x) => !gk.meshes.includes(x));
+      delete this.byKind[kind];
+    }
+    // En celu, mitad de multitud: cuida los fps con la malla cruda.
+    const spots = this.isMobile ? guestSpots.filter((_, i) => i % 2 === 0) : guestSpots;
+
+    const gScale = 1.6 / median(guests.figures.map((f) => f.height));
+    const gMat = this._patch(guests.material.clone());
+    const perVariant = guests.figures.map(() => []);
+    spots.forEach((p, i) => perVariant[i % guests.figures.length].push(p));
+    guests.figures.forEach((fig, vi) => {
+      fig.geometry.scale(gScale, gScale, gScale);
+      fig.geometry.rotateY(ROT);
+      this._instanceGLB(fig.geometry, gMat, perVariant[vi], false);
+    });
+
+    /* ── Team: orden de la referencia → estaciones ── */
+    const TEAM_SLOTS = [
+      { x: 3.5, z: -6.6, face: 0.4, dance: 0.25 },       // FOTOGRAFÍA (entre la gente)
+      { x: -3.64, z: -4.37, face: 2.474, dance: 0.2 },   // VIDEO
+      { x: -12.4, z: -9.15, face: 0, dance: 0.15 },      // DISEÑO
+      { x: 4.6, z: -18.4, face: 0, dance: 0.35 },        // VISUALES (VJ)
+      { x: 12.4, z: -8.5, face: Math.PI, dance: 0.1 },   // EDICIÓN
+    ];
+    const tScale = 1.64 / median(team.figures.map((f) => f.height));
+    const tMat = this._patch(team.material.clone());
+    team.figures.slice(0, TEAM_SLOTS.length).forEach((fig, i) => {
+      fig.geometry.scale(tScale, tScale, tScale);
+      fig.geometry.rotateY(ROT);
+      this._instanceGLB(fig.geometry, tMat, [TEAM_SLOTS[i]], true);
+    });
+
+    // Apagar los operadores procedurales reemplazados (escala 0).
+    // groups.op = [diseño, foto, video, vj, dj, piloto] → quedan dj y piloto.
+    this._zeroInstances('op', [0, 1, 2, 3]);
+    this._zeroInstances('opSeated', [0]);
+  }
+
+  _instanceGLB(geom, mat, spots, isCast) {
+    const n = spots.length;
+    if (!n) return;
+    const phases = new Float32Array(n);
+    const dances = new Float32Array(n);
+    spots.forEach((p, i) => {
+      phases[i] = Math.random();
+      dances[i] = (p.dance ?? 0.5) * (0.7 + Math.random() * 0.5);
+    });
+    geom.setAttribute('aPhase', new THREE.InstancedBufferAttribute(phases, 1));
+    geom.setAttribute('aDance', new THREE.InstancedBufferAttribute(dances, 1));
+    const mesh = new THREE.InstancedMesh(geom, mat, n);
+    const m4 = new THREE.Matrix4();
+    const q = new THREE.Quaternion();
+    const e = new THREE.Euler();
+    const sc = new THREE.Vector3();
+    const pos = new THREE.Vector3();
+    spots.forEach((p, i) => {
+      e.set(p.tilt ?? 0, p.face ?? Math.random() * Math.PI * 2, 0, 'YXZ');
+      q.setFromEuler(e);
+      const h = isCast ? 1 : 0.92 + Math.random() * 0.16; // escala uniforme: sin deformar
+      sc.set(h, h, h);
+      pos.set(p.x, p.y ?? 0, p.z);
+      m4.compose(pos, q, sc);
+      mesh.setMatrixAt(i, m4);
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    this.scene.add(mesh);
+    this.meshes.push(mesh);
+  }
+
+  _zeroInstances(kind, idxs) {
+    const gk = this.byKind[kind];
+    if (!gk) return;
+    const zero = new THREE.Matrix4().makeScale(0, 0, 0);
+    for (const mesh of gk.meshes) {
+      for (const i of idxs) mesh.setMatrixAt(i, zero);
+      mesh.instanceMatrix.needsUpdate = true;
     }
   }
 

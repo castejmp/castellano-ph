@@ -32,7 +32,7 @@ const camera = new THREE.PerspectiveCamera(CONFIG.shots[0].fov, innerWidth / inn
 
 /* ── Mundo ──────────────────────────────────────── */
 buildWorld(scene);
-const crowd = new Crowd(scene);
+const crowd = new Crowd(scene, isMobile);
 const led = new LedWall(scene);
 const extras = new Extras(scene);
 const rig = new LightRig(scene);
@@ -77,13 +77,18 @@ const ui = new UI({
   },
 });
 
-// Preloader: el mundo es procedural, así que es un beat estético corto.
-let pre = 0;
-const preTimer = setInterval(() => {
-  pre = Math.min(1, pre + 0.18);
-  ui.gateProgress(pre);
-  if (pre >= 1) clearInterval(preTimer);
-}, 80);
+// Preloader: carga REAL de los modelos de la gente (GLB). Si la red
+// falla o tarda demasiado, el público procedural queda como fallback
+// y el gate abre igual: la experiencia nunca se cuelga.
+ui.gateProgress(0.06);
+const glbTimeout = setTimeout(() => ui.gateProgress(1), 25_000);
+crowd
+  .upgradeFromGLB(import.meta.env.BASE_URL, (p) => ui.gateProgress(0.06 + p * 0.9))
+  .catch((e) => console.warn('GLB no disponible, queda el público procedural:', e))
+  .finally(() => {
+    clearTimeout(glbTimeout);
+    ui.gateProgress(1);
+  });
 
 /* ── Calidad adaptativa (kill-switch) ───────────── */
 let tier = 1;
