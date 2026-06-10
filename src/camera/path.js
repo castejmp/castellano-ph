@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { CONFIG } from '../config.js';
 
+const UP = new THREE.Vector3(0, 1, 0);
+
 /**
  * LA CÁMARA — un plano secuencia con gramática de cine.
  * Path Catmull-Rom por las 9 posiciones de shot; el lookAt viaja por su
@@ -68,6 +70,18 @@ export class CameraRig {
           const c = Math.cos(ang), s = Math.sin(ang);
           this._tp.x = this._tl.x + dx * c - dz * s;
           this._tp.z = this._tl.z + dx * s + dz * c;
+
+          // Composición: el protagonista a un costado del cuadro, la
+          // card al otro. Impares → card derecha, sujeto a la izquierda;
+          // pares → card izquierda, sujeto a la derecha.
+          const side = stR % 2 === 1 ? 1 : -1;
+          this._fwd ??= new THREE.Vector3();
+          this._right ??= new THREE.Vector3();
+          this._fwd.subVectors(this._tl, this._tp).normalize();
+          this._right.crossVectors(this._fwd, UP).normalize();
+          const dist = this._tp.distanceTo(this._tl);
+          const half = Math.tan(THREE.MathUtils.degToRad(targetFov) / 2) * dist * this.camera.aspect;
+          this._tl.addScaledVector(this._right, side * half * 0.32 * w);
         }
       }
 

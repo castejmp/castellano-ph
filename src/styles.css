@@ -109,7 +109,7 @@ button { font: inherit; cursor: pointer; }
 
 /* ── Cards por estación ─────────────────────────── */
 .card {
-  position: fixed; bottom: 5.4rem; left: 14vw; z-index: 30;
+  position: fixed; top: 50%; left: 9vw; z-index: 30;
   width: min(355px, calc(100vw - 4.5rem));
   padding: 1.15rem 1.3rem;
   background: rgba(8, 8, 11, 0.66);
@@ -117,12 +117,12 @@ button { font: inherit; cursor: pointer; }
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-left: 3px solid var(--accent);
   border-radius: 10px;
-  opacity: 0; transform: translateY(18px);
+  opacity: 0; transform: translateY(calc(-50% + 18px));
   transition: opacity 0.45s, transform 0.45s;
   pointer-events: none;
 }
-.card.right { left: auto; right: 14vw; }
-.card.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.card.right { left: auto; right: 9vw; }
+.card.show { opacity: 1; transform: translateY(-50%); pointer-events: auto; }
 .card .kicker { font-size: 0.6rem; letter-spacing: 0.26em; color: var(--accent); text-transform: uppercase; }
 .card h2 { margin: 0.45rem 0 0.55rem; font-size: 1.45rem; font-weight: 800; letter-spacing: 0.02em; }
 .card p { font-size: 0.85rem; line-height: 1.55; color: rgba(242, 239, 233, 0.82); }
@@ -141,7 +141,11 @@ button { font: inherit; cursor: pointer; }
 }
 .card .cta:hover { transform: scale(1.04); box-shadow: 0 0 36px -6px var(--accent); }
 @media (max-width: 720px) {
-  .card, .card.right { left: 1rem; right: 3.4rem; bottom: 4.6rem; width: auto; }
+  .card, .card.right {
+    left: 1rem; right: 3.4rem; top: auto; bottom: 4.6rem; width: auto;
+    transform: translateY(18px);
+  }
+  .card.show { transform: none; }
   .card p { font-size: 0.8rem; }
 }
 
@@ -213,5 +217,5 @@ button { font: inherit; cursor: pointer; }
 /* Reduced motion: fuera animaciones decorativas. */
 @media (prefers-reduced-motion: reduce) {
   .hero-title .hint { animation: none; }
-  .card { transition: opacity 0.2s; transform: none; }
+  .card { transition: opacity 0.2s; }
 }
