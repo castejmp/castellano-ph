@@ -137,9 +137,9 @@ export function buildWorld(scene) {
     const pz = 5.0 + Math.floor(i / 3) * 0.85;
     box(0.46, 0.012, 0.62, i % 2 ? '#e9e4d8' : '#dcd5c6', px, 1.03, pz, paperRots[i]);
   }
-  // Chips de color — la brand bar sobre la mesa.
+  // Chips de color — la brand bar sobre la mesa (bien adentro del borde).
   const brand = ['#f63f2f', '#fe720c', '#feca0d', '#7fc527', '#1f93e0'];
-  brand.forEach((c, i) => box(0.2, 0.016, 0.2, c, -21.6 + i * 0.26, 1.04, 6.05, 0.12));
+  brand.forEach((c, i) => box(0.2, 0.016, 0.2, c, -23.45 + i * 0.27, 1.04, 5.95, 0.12));
   // Laptop.
   box(0.62, 0.045, 0.44, '#26262e', -21.55, 1.05, 5.15, -0.5);
   const lap = new THREE.BoxGeometry(0.62, 0.42, 0.03);
@@ -161,8 +161,8 @@ export function buildWorld(scene) {
     const a = (l / 3) * Math.PI * 2;
     cyl(0.025, 0.035, 1.5, 5, '#33333b', 21.9 + Math.cos(a) * 0.3, 0.72, -12.5 + Math.sin(a) * 0.3, Math.cos(a) * 0.36, Math.sin(a) * 0.36);
   }
-  box(0.36, 0.24, 0.3, '#16161c', 21.9, 1.56, -12.5, bdRy);
-  cyl(0.07, 0.09, 0.16, 8, '#0c0c10', 21.9, 1.56, -12.32, 0, Math.PI / 2);
+  box(0.36, 0.24, 0.3, '#16161c', 21.9, 1.45, -12.5, bdRy);
+  cyl(0.07, 0.09, 0.16, 8, '#0c0c10', 21.9, 1.45, -12.32, 0, Math.PI / 2);
 
   /* ── Rincón de EDICIÓN (noroeste) ── */
   box(2.9, 0.1, 1.35, '#4a4038', -23.1, 0.96, -13.4, 0.95);
@@ -171,7 +171,11 @@ export function buildWorld(scene) {
   }
   box(1.5, 0.92, 0.08, '#101016', -23.0, 1.78, -13.55, 0.95); // marco monitor
   cyl(0.06, 0.16, 0.32, 6, '#1c1c24', -23.0, 1.18, -13.5); // pie
-  box(0.42, 0.45, 0.42, '#55504a', -21.6, 0.225, -12.4, 0.95); // banqueta
+  // Silla de oficina del editor (alineada con el escritorio).
+  cyl(0.27, 0.31, 0.05, 8, '#101014', -22.2, 0.03, -12.75); // base
+  cyl(0.045, 0.05, 0.52, 6, '#15151a', -22.2, 0.3, -12.75); // columna
+  box(0.52, 0.06, 0.5, '#1d1d23', -22.2, 0.59, -12.75, -2.19); // asiento
+  box(0.5, 0.55, 0.06, '#1d1d23', -22.0, 0.95, -12.61, -2.19); // respaldo
   // Tendedero de polaroids.
   cyl(0.035, 0.045, 2.6, 5, '#3c3c46', -25.6, 1.3, -11.2);
   cyl(0.035, 0.045, 2.6, 5, '#3c3c46', -22.4, 1.3, -16.4);
@@ -187,11 +191,11 @@ export function buildWorld(scene) {
   const vRy = 2.474; // apunta al centro de la pista
   for (let l = 0; l < 3; l++) {
     const a = (l / 3) * Math.PI * 2;
-    cyl(0.025, 0.035, 1.6, 5, '#33333b', -3.3 + Math.cos(a) * 0.32, 0.77, -4.8 + Math.sin(a) * 0.32, Math.cos(a) * 0.36, Math.sin(a) * 0.36);
+    cyl(0.025, 0.035, 1.38, 5, '#33333b', -3.3 + Math.cos(a) * 0.32, 0.66, -4.8 + Math.sin(a) * 0.32, Math.cos(a) * 0.36, Math.sin(a) * 0.36);
   }
-  box(0.42, 0.28, 0.55, '#16161c', -3.3, 1.7, -4.8, vRy);
-  cyl(0.07, 0.1, 0.2, 8, '#0c0c10', -3.3 + 0.22, 1.7, -4.8 - 0.28, 0, Math.PI / 2); // lente
-  box(0.2, 0.14, 0.03, '#26262e', -3.3 - 0.3, 1.78, -4.8 + 0.18, vRy + 0.5); // visor
+  box(0.42, 0.28, 0.55, '#16161c', -3.3, 1.48, -4.8, vRy);
+  cyl(0.07, 0.1, 0.2, 8, '#0c0c10', -3.3 + 0.22, 1.48, -4.8 - 0.28, 0, Math.PI / 2); // lente
+  box(0.2, 0.14, 0.03, '#26262e', -3.3 - 0.3, 1.56, -4.8 + 0.18, vRy + 0.5); // visor
 
   /* ── Consola VJ junto a la cabina (VISUALES) ── */
   box(1.7, 0.08, 0.85, '#1d1d23', 4.6, 0.96, -17.6);

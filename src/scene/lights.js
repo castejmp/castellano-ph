@@ -33,15 +33,15 @@ export class LightRig {
     this.practical.position.set(2, 4.5, 9);
     scene.add(this.practical);
 
-    this.deskLamp = new THREE.PointLight('#ffd9a8', 24, 9, 1.6);
+    this.deskLamp = new THREE.PointLight('#ffd9a8', 9, 9, 1.6);
     this.deskLamp.position.set(-22, 2.9, 5.5);
     scene.add(this.deskLamp);
 
-    this.editLamp = new THREE.PointLight('#cfe6ff', 20, 9, 1.6);
+    this.editLamp = new THREE.PointLight('#cfe6ff', 7, 9, 1.6);
     this.editLamp.position.set(-22.6, 2.7, -13.0);
     scene.add(this.editLamp);
 
-    this.photoLamp = new THREE.PointLight('#f4f0e6', 26, 11, 1.6);
+    this.photoLamp = new THREE.PointLight('#f4f0e6', 10, 11, 1.6);
     this.photoLamp.position.set(22.4, 3.1, -12.2);
     scene.add(this.photoLamp);
   }
