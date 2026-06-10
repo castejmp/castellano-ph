@@ -26,16 +26,17 @@ export const ANCHORS = {
     { pos: [28.55, 4, -8], size: [19.4, 7.4], ry: -Math.PI / 2 },
     { pos: [-28.55, 4, -8], size: [19.4, 7.4], ry: Math.PI / 2 },
   ],
-  // El flash dispara donde está el fotógrafo: entre la gente.
-  flashAt: [3.62, 1.7, -6.35],
+  // El flash dispara donde está el fotógrafo: al borde sur de la pista.
+  flashAt: [7.4, 1.7, -1.7],
   // Parrilla de luces: cabezales móviles, washes y strobos.
   rig: {
     heads: [[-5.5, 5.8, -6.5], [5.5, 5.8, -6.5], [-5.5, 5.8, -13], [5.5, 5.8, -13]],
     washes: [[-5, 5.72, -19], [-2.5, 5.72, -19], [0, 5.72, -19], [2.5, 5.72, -19], [5, 5.72, -19]],
     strobes: [[-1.6, 5.6, -19], [1.6, 5.6, -19]],
   },
-  // Neón acostado al lado ESTE de la pista, mirando al cielo (detalle gaming).
-  neon: { pos: [10.45, 0.05, -9], size: [7, 1.5] },
+  // Neón acostado al lado ESTE de la pista, mirando al cielo (detalle
+  // gaming). y=0.13: SOBRE el filo de la losa (0.09), si no queda enterrado.
+  neon: { pos: [10.45, 0.13, -9], size: [7, 1.5] },
   droneCenter: [0, 9.5, -4],
 };
 

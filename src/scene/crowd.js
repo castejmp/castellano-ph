@@ -25,18 +25,18 @@ const HAIRS = ['#2b2118', '#4a3320', '#171311', '#6b4a2a', '#8a6a3f', '#1f1a14']
 /* Elenco — coordenadas del salón. kind = silueta · tilt = inclinación. */
 const CAST = [
   { kind: 'op', x: -8.5, z: 19.35, face: Math.PI, tilt: 0.18, dance: 0.12 },   // DISEÑO: junto a la barra
-  { kind: 'op', x: 3.5, z: -6.6, face: 0.4, tilt: 0.05, dance: 0.25 },         // FOTOGRAFÍA: entre la gente
-  { kind: 'op', x: -3.64, z: -4.37, face: 2.474, tilt: 0.06, dance: 0.18 },    // VIDEO: operando la cámara
+  { kind: 'op', x: 7.5, z: -1.5, face: -2.36, tilt: 0.05, dance: 0.25 },       // FOTOGRAFÍA: fuera de la pista, apuntándole
+  { kind: 'op', x: -10.3, z: -6.5, face: 1.81, tilt: 0.06, dance: 0.18 },      // VIDEO: fuera de la pista, apuntándole
   { kind: 'op', x: 4.6, z: -18.4, face: 0, tilt: 0.1, dance: 0.4 },            // VISUALES (VJ en consola)
   { kind: 'op', x: 0, y: 0.5, z: -19.45, face: 0, tilt: 0, dance: 0.95 },      // DJ en tarima, visible
-  { kind: 'opSeated', x: 12.4, z: -8.8, face: -Math.PI / 2, dance: 0.08 },     // EDICIÓN: al este de la pista
+  { kind: 'opSeated', x: 8.6, z: 18.4, face: Math.PI, dance: 0.08 },           // EDICIÓN: junto a la barra
   { kind: 'op', x: 13.5, z: 7, face: -2.25, tilt: -0.14, dance: 0.1 },         // DRONE: piloto
 ];
 
 /* Dónde cae el spotlight "jugador seleccionado" por estación. */
 export const STATION_SPOTS = {
-  1: [-8.5, 19.35], 2: [3.5, -6.6], 3: [-3.64, -4.37],
-  4: [4.6, -18.4], 5: [12.4, -8.8], 6: [13.5, 7],
+  1: [-8.5, 19.35], 2: [7.5, -1.5], 3: [-10.3, -6.5],
+  4: [4.6, -18.4], 5: [8.6, 18.4], 6: [13.5, 7],
 };
 
 /* El piso transitable queda a y≈0.1 (pista + filo de la losa). */
@@ -218,19 +218,20 @@ export class Crowd {
       this._instanceGLB(fig.geometry, guests.material, perVariant[vi], false);
     });
 
-    /* ── Team: figura i (orden de fila) → su estación ── */
+    /* ── Team: figura i (orden de fila) → sus puestos ── */
     const TEAM_SLOTS = [
-      { x: 12.4, z: -8.8, face: -Math.PI / 2 },  // [0] EDITOR: este de la pista, mirándola (trae su mesa y PC)
-      { x: 4.6, z: -18.4, face: 0 },             // [1] VJ en la consola
-      { x: -8.5, z: 19.35, face: Math.PI },      // [2] DISEÑADOR: junto a la barra
-      { x: -3.64, z: -4.37, face: 2.474 },       // [3] FILMMAKER (trae su cámara)
-      { x: 3.5, z: -6.6, face: 0.4 },            // [4] FOTÓGRAFO: entre la gente (trae su cámara)
+      // [0] EDITORES ×2 junto a la barra, lado a lado (cada uno con su mesa y PC).
+      [{ x: 7.4, z: 18.4, face: Math.PI }, { x: 9.8, z: 18.4, face: Math.PI }],
+      [{ x: 4.6, z: -18.4, face: 0 }],            // [1] VJ en la consola
+      [{ x: -8.5, z: 19.35, face: Math.PI }],     // [2] DISEÑADOR: junto a la barra
+      [{ x: -10.3, z: -6.5, face: 1.81 }],        // [3] FILMMAKER: borde oeste, apuntando a la pista
+      [{ x: 7.5, z: -1.5, face: -2.36 }],         // [4] FOTÓGRAFO: borde sur, apuntando a la pista
     ];
     const tScale = 1.64 / median(team.figures.map((f) => f.height));
     team.figures.slice(0, TEAM_SLOTS.length).forEach((fig, i) => {
       fig.geometry.scale(tScale, tScale, tScale);
       fig.geometry.rotateY(ROT);
-      this._instanceGLB(fig.geometry, team.material, [TEAM_SLOTS[i]], true);
+      this._instanceGLB(fig.geometry, team.material, TEAM_SLOTS[i], true);
     });
 
     // Apagar los operadores procedurales reemplazados (escala 0).
