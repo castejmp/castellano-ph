@@ -166,7 +166,8 @@ export function buildWorld(scene) {
   }
   const paperRots = [0.2, -0.4, 0.7, -0.15];
   for (let i = 0; i < 4; i++) {
-    box(0.4, 0.012, 0.54, i % 2 ? '#e9e4d8' : '#dcd5c6', -9.05 + (i % 2) * 0.7, 0.99, 17.95 + Math.floor(i / 2) * 0.55, paperRots[i]);
+    // Papel apagado: que no queme bajo la lámpara.
+    box(0.4, 0.012, 0.54, i % 2 ? '#b9b3a4' : '#a8a294', -9.05 + (i % 2) * 0.7, 0.99, 17.95 + Math.floor(i / 2) * 0.55, paperRots[i]);
   }
   // Chips de la brand bar sobre la mesa.
   const brand = ['#f63f2f', '#fe720c', '#feca0d', '#7fc527', '#1f93e0'];
@@ -197,20 +198,22 @@ export function buildWorld(scene) {
 
   // Las cámaras del fotógrafo y del filmmaker vienen en sus modelos GLB.
 
-  /* ── Consola VJ junto a la cabina (VISUALES) ── */
+  /* ── Consola VJ junto a la cabina (VISUALES) ──
+     El VJ está al NORTE de la mesa: los monitores van al borde SUR,
+     con las pantallas mirando hacia él (extras.js las enciende). */
   box(1.7, 0.08, 0.85, '#1d1d23', 4.6, 0.96, -17.6);
   box(0.08, 0.95, 0.7, '#15151a', 3.85, 0.48, -17.6);
   box(0.08, 0.95, 0.7, '#15151a', 5.35, 0.48, -17.6);
-  box(0.55, 0.04, 0.4, '#26262e', 4.35, 1.02, -17.5, 0.25);
+  box(0.55, 0.04, 0.4, '#26262e', 4.35, 1.02, -17.62, 0.2);
   const vjLap = new THREE.BoxGeometry(0.55, 0.38, 0.03);
-  vjLap.rotateX(-0.4); vjLap.rotateY(0.25); vjLap.translate(4.32, 1.22, -17.68);
+  vjLap.rotateX(0.42); vjLap.rotateY(0.2); vjLap.translate(4.32, 1.2, -17.42);
   push(vjLap, '#101016');
   for (const mx of [-0.55, 0.45]) {
     const mon = new THREE.BoxGeometry(0.52, 0.36, 0.04);
-    mon.rotateX(-0.18); mon.rotateY(mx < 0 ? 0.3 : -0.3);
-    mon.translate(4.6 + mx + 0.1, 1.38, -17.85);
+    mon.rotateX(0.18); mon.rotateY(mx < 0 ? 0.28 : -0.28);
+    mon.translate(4.6 + mx + 0.1, 1.38, -17.3);
     push(mon, '#15151c');
-    cyl(0.04, 0.05, 0.3, 5, '#22222a', 4.6 + mx + 0.1, 1.12, -17.85);
+    cyl(0.04, 0.05, 0.3, 5, '#22222a', 4.6 + mx + 0.1, 1.12, -17.3);
   }
 
   /* ── Control remoto del piloto de DRONE ── */

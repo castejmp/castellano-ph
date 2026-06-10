@@ -31,6 +31,46 @@ const MAP_VERT = /* glsl */ `
   void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
 `;
 
+/** Contenido de pantallas encendidas: 'vj' (waveform) o 'design' (artboard). */
+function screenTexture(kind) {
+  const cnv = document.createElement('canvas');
+  cnv.width = 256; cnv.height = 160;
+  const c = cnv.getContext('2d');
+  c.fillStyle = '#0b0c12';
+  c.fillRect(0, 0, 256, 160);
+  const brand = ['#f63f2f', '#fe720c', '#feca0d', '#7fc527', '#1f93e0'];
+  if (kind === 'vj') {
+    // Waveform de colores + fila de clips, como una tablet de VJ.
+    for (let i = 0; i < 42; i++) {
+      const h = 28 + Math.abs(Math.sin(i * 0.7)) * 70 + (i % 3) * 9;
+      c.fillStyle = brand[i % 5];
+      c.fillRect(8 + i * 5.7, 120 - h, 4, h);
+    }
+    c.fillStyle = '#1c1e2a';
+    c.fillRect(0, 128, 256, 32);
+    for (let i = 0; i < 8; i++) {
+      c.fillStyle = i === 2 ? '#ffffff' : brand[i % 5];
+      c.fillRect(10 + i * 30, 134, 22, 20);
+    }
+  } else {
+    // Artboard del diseñador: lienzo claro + chips de marca + líneas.
+    c.fillStyle = '#e9e6dd';
+    c.fillRect(28, 16, 152, 112);
+    brand.forEach((b, i) => {
+      c.fillStyle = b;
+      c.fillRect(36 + i * 28, 100, 22, 20);
+    });
+    c.fillStyle = '#55504a';
+    c.fillRect(36, 30, 96, 10);
+    c.fillRect(36, 50, 70, 8);
+    c.fillStyle = '#1c1e2a';
+    c.fillRect(196, 16, 52, 112); // panel de herramientas
+  }
+  const tex = new THREE.CanvasTexture(cnv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
 /** Texto blanco sobre canvas transparente → textura para el neón. */
 function neonTexture(text) {
   const cnv = document.createElement('canvas');
@@ -154,6 +194,40 @@ export class Extras {
     // La pantalla de edición ya no hace falta: el modelo GLB del editor
     // viene con su propia PC.
 
+    /* ── Pantallas ENCENDIDAS: monitores y laptops con contenido ── */
+    const vjTex = screenTexture('vj');
+    const designTex = screenTexture('design');
+    const lit = (w, h, tex, build) => {
+      const g = new THREE.PlaneGeometry(w, h);
+      build(g);
+      const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ map: tex }));
+      m.matrixAutoUpdate = false;
+      m.updateMatrix();
+      scene.add(m);
+    };
+    // Monitores del VJ (miran al norte, hacia él).
+    for (const mx of [-0.55, 0.45]) {
+      lit(0.46, 0.3, vjTex, (g) => {
+        g.rotateY(Math.PI);
+        g.rotateX(0.18);
+        g.rotateY(mx < 0 ? 0.28 : -0.28);
+        g.translate(4.6 + mx + 0.1, 1.385, -17.328);
+      });
+    }
+    // Laptop del VJ.
+    lit(0.48, 0.32, vjTex, (g) => {
+      g.rotateY(Math.PI);
+      g.rotateX(0.42);
+      g.rotateY(0.2);
+      g.translate(4.31, 1.21, -17.44);
+    });
+    // Laptop del diseñador (mira al sur, hacia él).
+    lit(0.44, 0.3, designTex, (g) => {
+      g.rotateX(-0.35);
+      g.rotateY(-0.4);
+      g.translate(-8.0, 1.187, 17.942);
+    });
+
     /* ── Superficies de mapping (INMERSIVO) ── */
     this.mapUniforms = {
       uTime: { value: 0 }, uBass: { value: 0 }, uMid: { value: 0 },
@@ -261,8 +335,8 @@ export class Extras {
       this.spot.target.position.set(sp[0], 1, sp[1]);
       this.spotCone.position.set(sp[0], 6.6, sp[1]);
     }
-    this.spot.intensity = 240 * w;
-    this.spotConeMat.opacity = 0.05 * w;
+    this.spot.intensity = 120 * w;
+    this.spotConeMat.opacity = 0.025 * w;
     this.spotCone.visible = w > 0.02;
 
     // Neón: respira apenas con los medios.

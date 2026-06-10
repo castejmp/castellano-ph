@@ -49,7 +49,7 @@ const FRAG = /* glsl */ `
 
     // Icono de la estación: cuadrado central, muestreado del atlas
     // sobre la grilla de celdas para que sea "de píxeles LED".
-    vec2 iuv = (cell - vec2(0.42, 0.28)) / vec2(0.16, 0.44);
+    vec2 iuv = (cell - vec2(0.34, 0.06)) / vec2(0.32, 0.88);
     float icon = 0.0;
     if (iuv.x > 0.0 && iuv.x < 1.0 && iuv.y > 0.0 && iuv.y < 1.0) {
       icon = texture2D(uIcons, uIconCell + iuv * vec2(0.25, 0.5)).a * uIconMix;
