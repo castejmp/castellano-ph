@@ -19,8 +19,9 @@ import sharp from 'sharp';
 const FILES = [
   // 10 invitados bailando (ya procesado; se re-procesa si está el crudo).
   { src: 'scripts/raw/invitados.glb', out: 'public/models/invitados.glb', ratio: 0.3, clusters: null },
-  // CREW: [0,1] = dupla de fotógrafos posada junta · [2] = filmmaker.
-  { src: 'scripts/raw/crew.glb', out: 'public/models/crew.glb', ratio: 0.25, clusters: [[0, 1], [2]] },
+  // CREW: 3 sueltos — [0] filmmaker · [1] fotógrafo de pie · [2] fotógrafo agachado.
+  // (la fila viene espejada: z ascendente = derecha→izquierda del render)
+  { src: 'scripts/raw/crew.glb', out: 'public/models/crew.glb', ratio: 0.25, clusters: null },
   // STAFF: [0,1] = editores con su mesa (+ objeto en el piso) · [2] VJ · [3] diseñador.
   { src: 'scripts/raw/staff.glb', out: 'public/models/staff.glb', ratio: 0.35, clusters: [[0, 1], [2], [3]] },
 ];

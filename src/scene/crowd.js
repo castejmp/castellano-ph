@@ -175,7 +175,7 @@ export class Crowd {
   /* ──────────────────────────────────────────────
    * UPGRADE A GLB — los modelos reales del estudio.
    * · invitados.glb: 10 poses de baile → reemplazan al público.
-   * · crew.glb: [0] dupla de fotógrafos (posada junta) · [1] filmmaker.
+   * · crew.glb: [0] filmmaker · [1] fotógrafo de pie · [2] fotógrafo agachado.
    * · staff.glb: [0] editores ×2 con su mesa · [1] VJ · [2] diseñador.
    * El DJ y el piloto de drone siguen procedurales.
    * ────────────────────────────────────────────── */
@@ -221,8 +221,10 @@ export class Crowd {
     const sCrew = 1.7 / Math.max(...crew.figures.map((f) => f.height));
     const sStaff = 1.7 / Math.max(...staff.figures.map((f) => f.height));
     const PLACE = [
-      { fig: crew.figures[0], mat: crew.material, s: sCrew, slot: { x: 7.5, z: -1.5, face: -2.36 } },     // FOTOGRAFÍA: dupla apuntando a la pista
-      { fig: crew.figures[1], mat: crew.material, s: sCrew, slot: { x: -10.3, z: -6.5, face: 1.81 } },    // VIDEO: filmmaker
+      // FOTOGRAFÍA: los DOS fotógrafos lado a lado apuntando a la pista.
+      { fig: crew.figures[1], mat: crew.material, s: sCrew, slot: { x: 6.7, z: -1.3, face: -2.3 } },      // de pie
+      { fig: crew.figures[2], mat: crew.material, s: sCrew, slot: { x: 8.4, z: -1.8, face: -2.45 } },     // agachado
+      { fig: crew.figures[0], mat: crew.material, s: sCrew, slot: { x: -10.3, z: -6.5, face: 1.81 } },    // VIDEO: filmmaker
       { fig: staff.figures[0], mat: staff.material, s: sStaff, slot: { x: 8.6, z: 18.4, face: Math.PI } },// EDICIÓN: editores ×2 con su mesa
       { fig: staff.figures[1], mat: staff.material, s: sStaff, slot: { x: 4.6, z: -18.4, face: 0 } },     // VISUALES: VJ
       { fig: staff.figures[2], mat: staff.material, s: sStaff, slot: { x: -8.5, z: 19.35, face: Math.PI } }, // DISEÑO
