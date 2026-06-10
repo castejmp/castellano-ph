@@ -1,26 +1,33 @@
 /**
  * Pipeline offline de los GLB de gente (node scripts/optimize-people.mjs):
- *   1. Separa la malla única en figuras por componentes conectados.
- *   2. Cada figura queda como primitive propio (el simplificador no
- *      cruza primitives → las figuras nunca se sueldan entre sí).
+ *   1. Separa la malla única en componentes conectados.
+ *   2. Agrupa según `clusters` (índices de componentes ordenados por z):
+ *      los grupos quedan ARMADOS (ej. los dos editores con su mesa, la
+ *      dupla de fotógrafos posada junta). Cada grupo = un primitive —
+ *      el simplificador no cruza primitives, así nada se suelda entre sí.
  *   3. Simplifica la malla (meshoptimizer) y comprime texturas a WebP.
  *
- * Entrada:  public/models/{invitados,team}.glb   (crudos de Tripo)
- * Salida:   public/models/{invitados,team}_opt.glb
+ * Entrada:  scripts/raw/*.glb  (crudos de Tripo — NO van al repo)
+ * Salida:   public/models/*.glb
  */
+import { existsSync } from 'node:fs';
 import { NodeIO } from '@gltf-transform/core';
 import { simplify, prune, textureCompress } from '@gltf-transform/functions';
 import { MeshoptSimplifier } from 'meshoptimizer';
 import sharp from 'sharp';
 
 const FILES = [
-  { src: 'public/models/invitados.glb', out: 'public/models/invitados_opt.glb', ratio: 0.3 },
-  { src: 'public/models/team.glb', out: 'public/models/team_opt.glb', ratio: 0.4 },
+  // 10 invitados bailando (ya procesado; se re-procesa si está el crudo).
+  { src: 'scripts/raw/invitados.glb', out: 'public/models/invitados.glb', ratio: 0.3, clusters: null },
+  // CREW: [0,1] = dupla de fotógrafos posada junta · [2] = filmmaker.
+  { src: 'scripts/raw/crew.glb', out: 'public/models/crew.glb', ratio: 0.25, clusters: [[0, 1], [2]] },
+  // STAFF: [0,1] = editores con su mesa (+ objeto en el piso) · [2] VJ · [3] diseñador.
+  { src: 'scripts/raw/staff.glb', out: 'public/models/staff.glb', ratio: 0.35, clusters: [[0, 1], [2], [3]] },
 ];
 
 const io = new NodeIO();
 
-function splitPrimitive(doc, mesh) {
+function splitPrimitive(doc, mesh, clusters) {
   const prim = mesh.listPrimitives()[0];
   const pos = prim.getAttribute('POSITION').getArray();
   const nrm = prim.getAttribute('NORMAL').getArray();
@@ -55,10 +62,31 @@ function splitPrimitive(doc, mesh) {
     (buckets.get(r) ?? buckets.set(r, []).get(r)).push(t);
   }
 
-  // Una figura = un primitive nuevo, ordenadas por su lugar en la fila (z).
-  const figures = [];
+  // Componentes grandes ordenados por z (el orden de la fila original).
+  const comps = [];
   for (const tris of buckets.values()) {
     if (tris.length < 300) continue;
+    let zMin = Infinity, zMax = -Infinity;
+    for (const t of tris) {
+      for (let k = 0; k < 3; k++) {
+        const z = pos[idx[t + k] * 3 + 2];
+        if (z < zMin) zMin = z;
+        if (z > zMax) zMax = z;
+      }
+    }
+    comps.push({ tris, z: (zMin + zMax) / 2 });
+  }
+  comps.sort((a, b) => a.z - b.z);
+
+  // Agrupar (cada grupo conserva su composición interna).
+  const groups = (clusters ?? comps.map((_, i) => [i]))
+    .map((idxs) => idxs.flatMap((i) => comps[i]?.tris ?? []))
+    .filter((tris) => tris.length > 0);
+
+  const buffer = doc.getRoot().listBuffers()[0];
+  const material = prim.getMaterial();
+  const built = [];
+  for (const tris of groups) {
     const remap = new Map();
     const P = [], N = [], U = [], I = [];
     let zMin = Infinity, zMax = -Infinity;
@@ -72,19 +100,18 @@ function splitPrimitive(doc, mesh) {
           P.push(pos[vi * 3], pos[vi * 3 + 1], pos[vi * 3 + 2]);
           N.push(nrm[vi * 3], nrm[vi * 3 + 1], nrm[vi * 3 + 2]);
           U.push(uv[vi * 2], uv[vi * 2 + 1]);
-          zMin = Math.min(zMin, pos[vi * 3 + 2]);
-          zMax = Math.max(zMax, pos[vi * 3 + 2]);
+          const z = pos[vi * 3 + 2];
+          if (z < zMin) zMin = z;
+          if (z > zMax) zMax = z;
         }
         I.push(nv);
       }
     }
-    figures.push({ P, N, U, I, z: (zMin + zMax) / 2 });
+    built.push({ P, N, U, I, z: (zMin + zMax) / 2 });
   }
-  figures.sort((a, b) => a.z - b.z);
+  built.sort((a, b) => a.z - b.z);
 
-  const buffer = doc.getRoot().listBuffers()[0];
-  const material = prim.getMaterial();
-  for (const f of figures) {
+  for (const f of built) {
     const p = doc.createPrimitive()
       .setAttribute('POSITION', doc.createAccessor().setType('VEC3').setArray(new Float32Array(f.P)).setBuffer(buffer))
       .setAttribute('NORMAL', doc.createAccessor().setType('VEC3').setArray(new Float32Array(f.N)).setBuffer(buffer))
@@ -95,13 +122,17 @@ function splitPrimitive(doc, mesh) {
   }
   mesh.removePrimitive(prim);
   prim.dispose();
-  return figures.length;
+  return built.length;
 }
 
-for (const { src, out, ratio } of FILES) {
+for (const { src, out, ratio, clusters } of FILES) {
+  if (!existsSync(src)) {
+    console.log(`(salteado: no está ${src})`);
+    continue;
+  }
   const doc = await io.read(src);
   const mesh = doc.getRoot().listMeshes()[0];
-  const n = splitPrimitive(doc, mesh);
+  const n = splitPrimitive(doc, mesh, clusters);
   await doc.transform(
     simplify({ simplifier: MeshoptSimplifier, ratio, error: 0.005 }),
     prune(),
@@ -109,5 +140,5 @@ for (const { src, out, ratio } of FILES) {
   );
   await io.write(out, doc);
   const { statSync } = await import('node:fs');
-  console.log(`${src} → ${out}: ${n} figuras, ${(statSync(out).size / 1e6).toFixed(2)} MB`);
+  console.log(`${src} → ${out}: ${n} figuras/grupos, ${(statSync(out).size / 1e6).toFixed(2)} MB`);
 }

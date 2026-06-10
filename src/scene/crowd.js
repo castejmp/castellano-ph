@@ -174,19 +174,19 @@ export class Crowd {
 
   /* ──────────────────────────────────────────────
    * UPGRADE A GLB — los modelos reales del estudio.
-   * Invitados (10 poses, ESTÁTICOS) reemplazan al público; el team
-   * a los operadores. Orden real de la fila del team:
-   *   [0] editor (sentado con su mesa) · [1] VJ · [2] diseñador ·
-   *   [3] filmmaker (con cámara) · [4] fotógrafo (con cámara)
+   * · invitados.glb: 10 poses de baile → reemplazan al público.
+   * · crew.glb: [0] dupla de fotógrafos (posada junta) · [1] filmmaker.
+   * · staff.glb: [0] editores ×2 con su mesa · [1] VJ · [2] diseñador.
    * El DJ y el piloto de drone siguen procedurales.
    * ────────────────────────────────────────────── */
   async upgradeFromGLB(base, onProgress) {
     const { loadPeopleGLB } = await import('./glbPeople.js');
-    const prog = [0, 0];
-    const report = () => onProgress?.((prog[0] + prog[1]) / 2);
-    const [guests, team] = await Promise.all([
+    const prog = [0, 0, 0];
+    const report = () => onProgress?.((prog[0] + prog[1] + prog[2]) / 3);
+    const [guests, crew, staff] = await Promise.all([
       loadPeopleGLB(`${base}models/invitados.glb`, (p) => { prog[0] = p; report(); }),
-      loadPeopleGLB(`${base}models/team.glb`, (p) => { prog[1] = p; report(); }),
+      loadPeopleGLB(`${base}models/crew.glb`, (p) => { prog[1] = p; report(); }),
+      loadPeopleGLB(`${base}models/staff.glb`, (p) => { prog[2] = p; report(); }),
     ]);
 
     // La fila original mira a +x: girarla para que el `face` funcione.
@@ -206,33 +206,33 @@ export class Crowd {
       this.meshes = this.meshes.filter((x) => !gk.meshes.includes(x));
       delete this.byKind[kind];
     }
-    // La malla optimizada aguanta la multitud completa también en celu.
-    const spots = guestSpots;
 
     const gScale = 1.6 / median(guests.figures.map((f) => f.height));
     const perVariant = guests.figures.map(() => []);
-    spots.forEach((p, i) => perVariant[i % guests.figures.length].push(p));
+    guestSpots.forEach((p, i) => perVariant[i % guests.figures.length].push(p));
     guests.figures.forEach((fig, vi) => {
       fig.geometry.scale(gScale, gScale, gScale);
       fig.geometry.rotateY(ROT);
       this._instanceGLB(fig.geometry, guests.material, perVariant[vi], false);
     });
 
-    /* ── Team: figura i (orden de fila) → sus puestos ── */
-    const TEAM_SLOTS = [
-      // [0] EDITORES ×2 junto a la barra, pegados (cada uno con su mesa y PC).
-      [{ x: 7.95, z: 18.4, face: Math.PI }, { x: 9.25, z: 18.4, face: Math.PI }],
-      [{ x: 4.6, z: -18.4, face: 0 }],            // [1] VJ en la consola
-      [{ x: -8.5, z: 19.35, face: Math.PI }],     // [2] DISEÑADOR: junto a la barra
-      [{ x: -10.3, z: -6.5, face: 1.81 }],        // [3] FILMMAKER: borde oeste, apuntando a la pista
-      [{ x: 7.5, z: -1.5, face: -2.36 }],         // [4] FOTÓGRAFO: borde sur, apuntando a la pista
+    /* ── Team: cada figura/grupo a su puesto ── */
+    // Escala por archivo: la figura más alta (de pie) define el 1.7.
+    const sCrew = 1.7 / Math.max(...crew.figures.map((f) => f.height));
+    const sStaff = 1.7 / Math.max(...staff.figures.map((f) => f.height));
+    const PLACE = [
+      { fig: crew.figures[0], mat: crew.material, s: sCrew, slot: { x: 7.5, z: -1.5, face: -2.36 } },     // FOTOGRAFÍA: dupla apuntando a la pista
+      { fig: crew.figures[1], mat: crew.material, s: sCrew, slot: { x: -10.3, z: -6.5, face: 1.81 } },    // VIDEO: filmmaker
+      { fig: staff.figures[0], mat: staff.material, s: sStaff, slot: { x: 8.6, z: 18.4, face: Math.PI } },// EDICIÓN: editores ×2 con su mesa
+      { fig: staff.figures[1], mat: staff.material, s: sStaff, slot: { x: 4.6, z: -18.4, face: 0 } },     // VISUALES: VJ
+      { fig: staff.figures[2], mat: staff.material, s: sStaff, slot: { x: -8.5, z: 19.35, face: Math.PI } }, // DISEÑO
     ];
-    const tScale = 1.64 / median(team.figures.map((f) => f.height));
-    team.figures.slice(0, TEAM_SLOTS.length).forEach((fig, i) => {
-      fig.geometry.scale(tScale, tScale, tScale);
+    for (const { fig, mat, s, slot } of PLACE) {
+      if (!fig) continue;
+      fig.geometry.scale(s, s, s);
       fig.geometry.rotateY(ROT);
-      this._instanceGLB(fig.geometry, team.material, TEAM_SLOTS[i], true);
-    });
+      this._instanceGLB(fig.geometry, mat, [slot], true);
+    }
 
     // Apagar los operadores procedurales reemplazados (escala 0).
     // groups.op = [diseño, foto, video, vj, dj, piloto] → quedan dj y piloto.
