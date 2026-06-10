@@ -35,7 +35,10 @@ export async function loadPeopleGLB(url, onProgress) {
   gltf.scene.traverse((o) => { if (o.isMesh) meshes.push(o); });
 
   const figures = meshes.map((m) => {
-    const g = m.geometry.clone().applyMatrix4(m.matrixWorld);
+    // KHR_mesh_quantization deja position/normal como enteros (int16).
+    // applyMatrix4 escribiría metros sobre ese array entero y truncaría
+    // la malla: hay que pasar a float ANTES de transformar.
+    const g = dequantize(m.geometry.clone()).applyMatrix4(m.matrixWorld);
     g.computeBoundingBox();
     const bb = g.boundingBox;
     const lineupZ = (bb.min.z + bb.max.z) / 2;
@@ -45,4 +48,21 @@ export async function loadPeopleGLB(url, onProgress) {
   figures.sort((a, b) => a.lineupZ - b.lineupZ);
 
   return { figures, material: meshes[0].material };
+}
+
+/** Convierte position/normal cuantizados (int) a Float32 (los getters
+ *  ya devuelven el valor desnormalizado), para poder aplicar matrices. */
+function dequantize(geo) {
+  for (const name of ['position', 'normal']) {
+    const a = geo.getAttribute(name);
+    if (!a || a.array instanceof Float32Array) continue;
+    const out = new Float32Array(a.count * a.itemSize);
+    for (let i = 0; i < a.count; i++) {
+      out[i * a.itemSize] = a.getX(i);
+      out[i * a.itemSize + 1] = a.getY(i);
+      if (a.itemSize > 2) out[i * a.itemSize + 2] = a.getZ(i);
+    }
+    geo.setAttribute(name, new THREE.BufferAttribute(out, a.itemSize, false));
+  }
+  return geo;
 }
