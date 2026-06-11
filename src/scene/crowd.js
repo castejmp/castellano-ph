@@ -52,26 +52,40 @@ const FLOOR_Y = 0.1;
  * Si el archivo no existe todavía, se saltea sin romper nada.
  * ────────────────────────────────────────────── */
 // Los archivos de UNA figura (Tripo single) miran a -z → rot: PI.
-// Los de fila (invitados, editores) miran a +x → rot: -PI/2 (default).
+// Los de fila (invitados) miran a +x → rot: -PI/2 (default).
 const SINGLE = Math.PI;
+// Alturas: operadores apenas por debajo de los invitados (1.66) para
+// que la relación operadores/invitados/mesas cierre.
+const OP_H = 1.55;
 const FIGURE_FILES = [
   // FOTOGRAFÍA: dos fotógrafos al borde sur, APUNTANDO AL CENTRO de la pista.
-  { file: 'photographer.glb', rot: SINGLE, slots: [{ x: 6.7, z: -1.3, face: -2.43 }] },
-  { file: 'photographer-women.glb', rot: SINGLE, slots: [{ x: 8.4, z: -1.8, face: -2.28 }] },
+  { file: 'photographer.glb', rot: SINGLE, height: OP_H, slots: [{ x: 6.7, z: -1.3, face: -2.43 }] },
+  { file: 'photographer-women.glb', rot: SINGLE, height: OP_H, slots: [{ x: 8.4, z: -1.8, face: -2.28 }] },
   // VIDEO: camarógrafo al borde oeste, apuntando al centro.
-  { file: 'cameraoperator.glb', rot: SINGLE, slots: [{ x: -10.3, z: -6.5, face: 1.81 }] },
-  // EDICIÓN: los dos editores con su mesa (un bloque), junto a la barra.
-  { file: 'editores.glb', slots: [{ x: 8.6, z: 18.4, face: Math.PI }], height: 1.5 },
-  // VISUALES: el VJ en su consola.
-  { file: 'worker.glb', rot: SINGLE, slots: [{ x: 4.6, z: -18.4, face: 0 }] },
+  { file: 'cameraoperator.glb', rot: SINGLE, height: OP_H, slots: [{ x: -10.3, z: -6.5, face: 1.81 }] },
+  // EDICIÓN: los dos editores con su mesa (es escena single: mira a -z).
+  { file: 'editores.glb', rot: SINGLE, slots: [{ x: 8.6, z: 18.4, face: Math.PI }], height: 1.5 },
+  // VISUALES: el VJ en su consola (toy ↔ worker estaban invertidos).
+  { file: 'toy.glb', rot: SINGLE, height: OP_H, slots: [{ x: 4.6, z: -18.4, face: 0 }] },
   // DISEÑO: el diseñador en su mesa junto a la barra.
-  { file: 'toy.glb', rot: SINGLE, slots: [{ x: -8.5, z: 19.35, face: Math.PI }] },
+  { file: 'worker.glb', rot: SINGLE, height: OP_H, slots: [{ x: -8.5, z: 19.35, face: Math.PI }] },
   // DJ con su mixer en la tarima (reemplaza la cabina procedural).
-  { file: 'dj.glb', rot: SINGLE, slots: [{ x: 0, y: 0.4, z: -19.0, face: 0 }], removes: 'dj', zeroOp: 4 },
-  // Mesas redondas GLB en los 8 lugares (reemplazan a las procedurales).
+  { file: 'dj.glb', rot: SINGLE, height: 1.6, slots: [{ x: 0, y: 0.4, z: -19.0, face: Math.PI }], removes: 'dj', zeroOp: 4 },
+  // Mesa redonda + living (2 grupos en un archivo): sector de mesas al
+  // sur + sector de livings al sureste. Reemplazan a los procedurales.
   {
-    file: 'mesas.glb', height: 1.05, removes: 'tables',
-    slots: TABLES.map(([x, z], i) => ({ x, z, face: i * 1.3 })),
+    file: 'mesas.glb', path: 'mesas.glb', removes: 'tables',
+    place: [
+      { fig: 0, height: 1.0, slots: TABLES.map(([x, z], i) => ({ x, z, face: i * 1.3 })) },
+      {
+        fig: 1, height: 0.85,
+        slots: [
+          { x: 18.2, z: 13.8, face: -2.2 },
+          { x: 15.0, z: 17.2, face: -2.8 },
+          { x: 21.2, z: 16.4, face: -2.4 },
+        ],
+      },
+    ],
   },
 ];
 
@@ -220,7 +234,7 @@ export class Crowd {
     const [guests, ...figs] = await Promise.all([
       loadPeopleGLB(`${base}models/invitados.glb`, (p) => { prog[0] = p; report(); }),
       ...FIGURE_FILES.map((f) =>
-        loadPeopleGLB(`${base}models/people/${f.file}`, (p) => { prog[1] = p; report(); })
+        loadPeopleGLB(`${base}models/${f.path ?? `people/${f.file}`}`, (p) => { prog[1] = p; report(); })
           .catch(() => null)),
     ]);
 
@@ -244,7 +258,7 @@ export class Crowd {
 
     // 10 invitados, 1:1 con los lugares de la pista; tres figuras
     // repiten una instancia extra en la barra.
-    const gScale = 1.6 / median(guests.figures.map((f) => f.height));
+    const gScale = 1.66 / median(guests.figures.map((f) => f.height));
     const spots10 = this._pistaSpots ?? guestSpots;
     const barBy = { 1: 0, 4: 1, 7: 2 }; // figura → lugar de barra
     guests.figures.forEach((fig, i) => {
@@ -257,22 +271,28 @@ export class Crowd {
       this._instanceGLB(fig.geometry, guests.material, spots, false);
     });
 
-    /* ── Figuras individuales (un archivo = una persona/prop) ── */
+    /* ── Figuras individuales (un archivo = una o más piezas) ── */
     figs.forEach((g, i) => {
       if (!g) return; // archivo no disponible todavía → lo salteamos
-      const { slots, height = 1.7, rot = ROT, removes, zeroOp } = FIGURE_FILES[i];
-      const fig = g.figures[0];
-      const s = height / fig.height;
-      fig.geometry.scale(s, s, s);
-      fig.geometry.rotateY(rot);
-      this._instanceGLB(fig.geometry, g.material, slots, true);
-      // Si trae su propia utilería (cabina DJ, mesas), la procedural se va.
-      if (removes && world[removes]) {
-        this.scene.remove(world[removes]);
-        world[removes].geometry.dispose();
-        delete world[removes];
+      const entry = FIGURE_FILES[i];
+      const rot = entry.rot ?? ROT;
+      const places = entry.place ?? [{ fig: 0, slots: entry.slots, height: entry.height }];
+      for (const pl of places) {
+        const fig = g.figures[pl.fig ?? 0];
+        if (!fig) continue;
+        const s = (pl.height ?? entry.height ?? 1.6) / fig.height;
+        fig.geometry.scale(s, s, s);
+        fig.geometry.rotateY(rot);
+        this._instanceGLB(fig.geometry, g.material, pl.slots, true);
       }
-      if (zeroOp !== undefined) this._zeroInstances('op', [zeroOp]);
+      // Si trae su propia utilería (cabina DJ, mesas, lounge), la
+      // versión procedural se retira de escena.
+      if (entry.removes && world[entry.removes]) {
+        this.scene.remove(world[entry.removes]);
+        world[entry.removes].geometry.dispose();
+        delete world[entry.removes];
+      }
+      if (entry.zeroOp !== undefined) this._zeroInstances('op', [entry.zeroOp]);
     });
 
     // Apagar los operadores procedurales reemplazados (escala 0).

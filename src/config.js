@@ -100,7 +100,7 @@ export const CONFIG = {
     { pos: [45, 36, 45], look: [0, 0, 0], fov: 30 },                // 0 PLANO GENERAL (iso)
     // Players a media distancia: de cerca la compresión de malla se nota.
     { pos: [-4.4, 3.0, 26.7], look: [-8.6, 1.2, 18.9], fov: 30 },   // 1 DISEÑO: junto a la barra, la fiesta de fondo
-    { pos: [11.2, 2.7, 4.3], look: [7.4, 1.3, -1.9], fov: 30 },     // 2 FOTOGRAFÍA: borde sur, pista y LED detrás
+    { pos: [2.8, 2.4, -8.2], look: [7.5, 1.4, -1.6], fov: 30 },     // 2 FOTOGRAFÍA: de FRENTE a los fotógrafos, desde la pista
     { pos: [-14.6, 2.7, -1.7], look: [-10.4, 1.3, -6.3], fov: 32 }, // 3 VIDEO: borde oeste, pista y LED detrás
     { pos: [4.9, 3.3, -8.8], look: [4.6, 1.8, -18.5], fov: 32 },    // 4 VISUALES: el VJ y la pantalla encima
     { pos: [11.8, 3.0, 26.9], look: [8.6, 1.2, 18.7], fov: 30 },    // 5 EDICIÓN: los dos editores junto a la barra

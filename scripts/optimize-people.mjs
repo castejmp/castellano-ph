@@ -23,6 +23,9 @@ await MeshoptDecoder.ready;
 const FILES = [
   // 10 invitados bailando (ya procesado; se re-procesa si está el crudo).
   { src: 'scripts/raw/invitados.glb', out: 'public/models/invitados.glb', ratio: 0.3, clusters: null },
+  // Mesa redonda + living en un mismo archivo → DOS grupos separados:
+  // [1,4,5] = mesa con sillas · [0,2,3,6] = living (sillones+sofá+ratona).
+  { src: 'scripts/raw/mesas.glb', out: 'public/models/mesas.glb', ratio: 0.14, clusters: [[1, 4, 5], [0, 2, 3, 6]] },
 ];
 
 // Figuras individuales (una persona por archivo): scripts/raw/people/*.glb

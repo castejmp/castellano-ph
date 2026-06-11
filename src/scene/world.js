@@ -161,12 +161,14 @@ export function buildWorld(scene) {
     cyl(0.06, 0.075, 0.42, 6, bottleCols[i % 6], bx, by, 21.42);
   }
 
-  /* ── Lounge sureste ── */
+  /* ── Lounge sureste (lo reemplaza el living de mesas.glb) ── */
+  target = partsTables;
   for (const [sx, sz, sr] of [[17.5, 13, 0.5], [20.5, 16.5, -0.9]]) {
     box(2.5, 0.5, 1.0, '#6b5048', sx, 0.32, sz, sr);
     box(2.5, 0.62, 0.22, '#7a5c52', sx - Math.sin(sr) * 0.42, 0.78, sz - Math.cos(sr) * 0.42, sr);
   }
   cyl(0.55, 0.62, 0.42, 8, '#3c3630', 18.6, 0.21, 14.9);
+  target = parts;
 
   /* ── Mesa de DISEÑO junto a la barra (fuera de la fiesta) ── */
   box(2.2, 0.1, 1.2, '#4a4038', -8.5, 0.93, 18.2);
