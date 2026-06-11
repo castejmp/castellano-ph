@@ -70,11 +70,21 @@ export class FXManager {
     const pr = style === 'retro'
       ? Math.min(0.6, Math.max(0.12, cfg.width / innerWidth))
       : this._basePR;
-    this.renderer.setPixelRatio(pr);
+    this.renderer.setPixelRatio(pr); // camino sin composer (móvil)
+    this.post?.setPixelRatio(pr);    // el composer captura el suyo propio
+
+    // Las pantallas LED apagan su grilla de píxeles en retro: la doble
+    // pixelación (lamparitas × render lowres) hacía moiré feo.
+    if (this.led) {
+      this.led.uniforms.uMask.value = style === 'retro' ? 0 : 1;
+      this.led.uniforms.uGrid.value.set(
+        style === 'retro' ? 44 : 110,
+        style === 'retro' ? 18 : 44
+      );
+    }
 
     this.post?.setRetroVariant(cfg);
     this.post?.setStyle(style);
-    this.post?.setSize(innerWidth, innerHeight);
   }
 
   /** Re-aplica el estilo (p. ej. cuando los GLB cargan tarde). */

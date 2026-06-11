@@ -13,8 +13,9 @@ const UP = new THREE.Vector3(0, 1, 0);
  * prefers-reduced-motion → cortes directos al shot asentado, sin vuelo.
  */
 export class CameraRig {
-  constructor(camera) {
+  constructor(camera, isMobile = false) {
     this.camera = camera;
+    this.isMobile = isMobile;
     const shots = CONFIG.shots;
     this.shots = shots;
     this.max = shots.length - 1;
@@ -75,17 +76,21 @@ export class CameraRig {
           this._tp.x += (this._tl.x + dx * c - dz * s - this._tp.x) * w;
           this._tp.z += (this._tl.z + dx * s + dz * c - this._tp.z) * w;
 
-          // Composición: el protagonista a un costado del cuadro, la
-          // card al otro. Impares → card derecha, sujeto a la izquierda;
-          // pares → card izquierda, sujeto a la derecha.
-          const side = stR % 2 === 1 ? 1 : -1;
-          this._fwd ??= new THREE.Vector3();
-          this._right ??= new THREE.Vector3();
-          this._fwd.subVectors(this._tl, this._tp).normalize();
-          this._right.crossVectors(this._fwd, UP).normalize();
+          // Composición: en desktop el protagonista va al costado
+          // opuesto a la card; en móvil la card tapa la parte BAJA,
+          // así que el protagonista sube a la mitad superior.
           const dist = this._tp.distanceTo(this._tl);
-          const half = Math.tan(THREE.MathUtils.degToRad(targetFov) / 2) * dist * this.camera.aspect;
-          this._tl.addScaledVector(this._right, side * half * 0.32 * w);
+          const halfV = Math.tan(THREE.MathUtils.degToRad(targetFov) / 2) * dist;
+          if (this.isMobile) {
+            this._tl.y -= halfV * 0.34 * w; // apuntar más abajo = sujeto más arriba
+          } else {
+            const side = stR % 2 === 1 ? 1 : -1;
+            this._fwd ??= new THREE.Vector3();
+            this._right ??= new THREE.Vector3();
+            this._fwd.subVectors(this._tl, this._tp).normalize();
+            this._right.crossVectors(this._fwd, UP).normalize();
+            this._tl.addScaledVector(this._right, side * halfV * this.camera.aspect * 0.32 * w);
+          }
         }
       }
 

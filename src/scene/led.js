@@ -19,14 +19,14 @@ const VERT = /* glsl */ `
 `;
 
 const FRAG = /* glsl */ `
-  uniform float uTime, uBass, uMid, uTreb, uBoost, uIconMix;
+  uniform float uTime, uBass, uMid, uTreb, uBoost, uIconMix, uMask;
   uniform vec3 uA, uB, uC;
   uniform sampler2D uIcons;
-  uniform vec2 uIconCell;
+  uniform vec2 uIconCell, uGrid;
   varying vec2 vUv;
 
   void main() {
-    vec2 grid = vec2(110.0, 44.0);
+    vec2 grid = uGrid;
     vec2 cell = (floor(vUv * grid) + 0.5) / grid;
     vec2 cuv  = fract(vUv * grid);
     float t = uTime;
@@ -59,7 +59,8 @@ const FRAG = /* glsl */ `
 
     float px = smoothstep(0.0, 0.22, cuv.x) * smoothstep(1.0, 0.78, cuv.x)
              * smoothstep(0.0, 0.28, cuv.y) * smoothstep(1.0, 0.72, cuv.y);
-    col *= 0.3 + 0.7 * px;
+    // uMask 0 = sin grilla de lamparitas (retro: evita moiré doble).
+    col *= mix(1.0, 0.3 + 0.7 * px, uMask);
 
     col *= (0.55 + uBass * 1.1) * (1.0 + uBoost * 0.9);
     gl_FragColor = vec4(col, 1.0);
@@ -173,6 +174,8 @@ export class LedWall {
       uTreb: { value: 0 },
       uBoost: { value: 0 },
       uIconMix: { value: 0 },
+      uMask: { value: 1 },
+      uGrid: { value: new THREE.Vector2(110, 44) },
       uIcons: { value: buildIconAtlas() },
       uIconCell: { value: new THREE.Vector2(0, 0.5) },
       uA: { value: new THREE.Color('#ff2b2b') },

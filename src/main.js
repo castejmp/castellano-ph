@@ -39,12 +39,13 @@ const extras = new Extras(scene);
 const rig = new LightRig(scene);
 const themes = new ThemeEngine({ scene, renderer, rig, led, extras });
 const audio = new AudioEngine();
-const cameraRig = new CameraRig(camera);
+const cameraRig = new CameraRig(camera, isMobile);
 const scroll = new ScrollEngine(CONFIG.stations.length, reduced);
 const debug = new DebugHud();
 
-/* ── FX: los 4 conceptos de estética, conmutables ── */
+/* ── FX: estética retro (variantes con teclas 1-4) ── */
 const fx = new FXManager({ renderer, scene, isMobile });
+fx.led = led; // la LED apaga su grilla en retro (anti-moiré)
 
 /* ── Postproceso: solo desktop, con kill-switch ── */
 let post = null;

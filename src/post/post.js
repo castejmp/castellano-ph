@@ -145,6 +145,13 @@ export class Post {
     this.composer.setSize(w, h);
   }
 
+  /** El composer captura el pixelRatio al construirse: cambiar el del
+   *  renderer no alcanza — hay que avisarle (clave para las variantes retro). */
+  setPixelRatio(pr) {
+    this.composer.setPixelRatio(pr);
+    this.composer.setSize(innerWidth, innerHeight);
+  }
+
   setBokeh(on) {
     this.bokehOn = on;
     this.bokeh.enabled = on && this.style === 'cine';
