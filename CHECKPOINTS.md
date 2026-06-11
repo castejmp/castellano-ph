@@ -10,6 +10,30 @@ git revert <hash>..HEAD        # deshacer lo posterior sin reescribir historia
 
 ---
 
+## CHECKPOINT 2 — "retro + marca calcada" · 2026-06-11
+
+**Commit:** `53d6fd3`
+
+Estado previo a la etapa de modificación de COLORES:
+
+- Estética RETRO fija (PS1 480: render interno 480 px reescalado
+  nearest, 5 bits/canal con dithering Bayer). Pantallas LED sin
+  grilla de lamparitas en retro (anti-moiré, patrón 44×18).
+- Marca calcada a mano (brand.js): wordmark geométrico letra por
+  letra + isotipo |o| proporcionado. Presente en gate, nav, piso
+  (×2 + |o| central) y LED. Sistema listo para PNG reales en
+  public/brand/ (pisan el calco en todos lados).
+- Hero sin tagline; placa final sin la frase del mapa, con
+  HABLEMOS · IG · VER MÁS.
+- Livings +50% (1.28 m). Spotlight de edición ×2 de ancho.
+- Shot de diseño cenital; móvil con protagonista en mitad superior.
+- Flashes paparazzi aleatorios; mute; POV drone; copy definitivo.
+- Fix importante: EffectComposer.setPixelRatio al cambiar resolución.
+
+**Pendiente conocido:** PNGs reales de los logos (como archivo).
+
+---
+
 ## CHECKPOINT 1 — "web segura" · 2026-06-11
 
 **Commit:** `7e3b556`
