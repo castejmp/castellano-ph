@@ -310,7 +310,7 @@ export class Extras {
     const pg = new THREE.BufferGeometry();
     pg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     this.particleMat = new THREE.PointsMaterial({
-      color: '#ff5a6e', size: 0.16, transparent: true, opacity: 0.5,
+      color: '#ff5a6e', size: 0.13, transparent: true, opacity: 0.5,
       depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true,
     });
     this.particles = new THREE.Points(pg, this.particleMat);
@@ -416,6 +416,6 @@ export class Extras {
 
     // Haze.
     this.particles.rotation.y = t * 0.011;
-    this.particleMat.size = 0.16 * (1 + bands.treb * 0.9);
+    this.particleMat.size = 0.13 * (1 + bands.treb * 0.9);
   }
 }

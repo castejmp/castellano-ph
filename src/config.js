@@ -135,7 +135,7 @@ export const CONFIG = {
         key: '#ff2330', keyI: 1000, wash: '#e0334e', washI: 420,
         practical: '#ffac63', practicalI: 85, // contrapunto dorado
         led: ['#ff2b2b', '#47060e', '#ffe9c4'], // highlight casi blanco
-        particles: '#ff7a5e', particleOpacity: 0.55,
+        particles: '#ff7a5e', particleOpacity: 0.4,
         tint: '#aaa4ad', exposure: 1.12, crowdEnergy: 1.0,
       },
       music: {
@@ -160,7 +160,8 @@ export const CONFIG = {
         hemiSky: '#fff8ea', hemiGround: '#a8b294', hemiI: 1.75,
         key: '#ffedc8', keyI: 1500, wash: '#fff3df', washI: 750,
         practical: '#ffd9a0', practicalI: 50,
-        led: ['#9caf88', '#fffaf0', '#caa45f'], // salvia + marfil + dorado
+        // [principal, BASE OSCURA, highlight] — la base clara quemaba la pantalla.
+        led: ['#a9bd90', '#37422e', '#fff3da'],
         particles: '#fff6e0', particleOpacity: 0.4,
         tint: '#fff2e2', exposure: 1.08, crowdEnergy: 0.55,
       },
@@ -186,7 +187,7 @@ export const CONFIG = {
         bg: '#020609', fog: '#04080f', fogDensity: 0.008,
         hemiSky: '#36425c', hemiGround: '#0a0d13', hemiI: 0.9,
         key: '#3d8fe0', keyI: 1100, wash: '#7fb4ff', washI: 420,
-        practical: '#ffd9a8', practicalI: 55, // contrapunto cálido
+        practical: '#ffd9a8', practicalI: 72, // contrapunto cálido (pieles)
         led: ['#1f93e0', '#06223c', '#eaf6ff'],
         particles: '#9fd0ff', particleOpacity: 0.4,
         tint: '#a4b2c6', exposure: 1.1, crowdEnergy: 0.4,
