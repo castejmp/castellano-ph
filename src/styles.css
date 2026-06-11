@@ -285,6 +285,17 @@ body[data-fx='vhs'] .rec-hud { display: flex; }
 }
 @keyframes recblink { 50% { opacity: 0.15; } }
 
+/* Toast de variante retro (teclas 1-4). */
+.fx-toast {
+  position: fixed; bottom: 5.5rem; left: 50%; transform: translateX(-50%);
+  z-index: 80; padding: 0.5rem 1.1rem; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.75); border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.7rem; letter-spacing: 0.2em; color: #fff;
+  opacity: 0; pointer-events: none;
+}
+.fx-toast.show { animation: fxtoast 1.6s ease forwards; }
+@keyframes fxtoast { 0% { opacity: 0; } 12% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; } }
+
 /* ── Debug HUD (?fps) ───────────────────────────── */
 .debug {
   position: fixed; left: 1rem; top: 4rem; z-index: 90;

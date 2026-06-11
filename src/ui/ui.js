@@ -6,7 +6,7 @@ import { CONFIG } from '../config.js';
  * dots laterales, una card por estación, flash y footer fijo.
  */
 export class UI {
-  constructor({ onModeChosen, onModeCycle, onDot, onToggleMute, onFXCycle }) {
+  constructor({ onModeChosen, onModeCycle, onDot, onToggleMute }) {
     const root = document.getElementById('ui');
     const S = CONFIG.stations;
 
@@ -28,18 +28,12 @@ export class UI {
         <button class="mute-btn" data-mute-btn type="button" aria-label="Silenciar" aria-pressed="false">
           <span data-mute-icon>♪</span>
         </button>
-        <button class="mode-btn" data-fx-btn type="button" title="Estética">FX·CINE</button>
         <button class="mode-btn" data-mode-btn type="button">MODO</button>
       </div>`;
     this.hud = nav.querySelector('[data-hud]');
     this.clockEl = nav.querySelector('[data-clock]');
     this.modeBtn = nav.querySelector('[data-mode-btn]');
     this.modeBtn.addEventListener('click', onModeCycle);
-    this.fxBtn = nav.querySelector('[data-fx-btn]');
-    this.fxBtn.addEventListener('click', () => {
-      const style = onFXCycle?.();
-      if (style) this.fxBtn.textContent = `FX·${style.toUpperCase()}`;
-    });
     this.muteBtn = nav.querySelector('[data-mute-btn]');
     this.muteIcon = nav.querySelector('[data-mute-icon]');
     this.muteBtn.addEventListener('click', () => {

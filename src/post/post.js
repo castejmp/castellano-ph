@@ -37,20 +37,38 @@ const VIGNETTE = {
   `,
 };
 
-/* Cuantización 15 bpp + Bayer: el color de una consola de los 90. */
+/* Cuantización + dithering parametrizados: las variantes retro
+   navegan niveles de color, fuerza de dither, saturación y máscara CRT. */
 const RETRO = {
-  uniforms: { tDiffuse: { value: null } },
+  uniforms: {
+    tDiffuse: { value: null },
+    uLevels: { value: 31 },  // niveles por canal (31=5bits, 15=4, 7=3)
+    uDither: { value: 0.9 }, // fuerza del Bayer
+    uSat: { value: 1.0 },    // saturación (consolas cartoon → >1)
+    uCRT: { value: 0 },      // máscara de fósforos + scanline
+  },
   vertexShader: VIGNETTE.vertexShader,
   fragmentShader: /* glsl */ `
     uniform sampler2D tDiffuse;
+    uniform float uLevels, uDither, uSat, uCRT;
     varying vec2 vUv;
     float bayer2(vec2 a) { a = floor(a); return fract(a.x * 0.5 + a.y * a.y * 0.75); }
     float bayer4(vec2 a) { return bayer2(0.5 * a) * 0.25 + bayer2(a); }
     void main() {
       vec3 c = texture2D(tDiffuse, vUv).rgb;
       float d = bayer4(gl_FragCoord.xy) - 0.5;
-      c = floor(c * 31.0 + 0.5 + d * 0.9) / 31.0; // 5 bits por canal
+      c = floor(c * uLevels + 0.5 + d * uDither) / uLevels;
+      float l = dot(c, vec3(0.299, 0.587, 0.114));
+      c = mix(vec3(l), c, uSat);
       c = pow(c, vec3(1.05)); // leve crush de sombras
+      if (uCRT > 0.5) {
+        // Tríada de fósforos RGB + scanline, al estilo tubo.
+        float px = mod(gl_FragCoord.x, 3.0);
+        vec3 mask = vec3(px < 1.0 ? 1.0 : 0.55, px >= 1.0 && px < 2.0 ? 1.0 : 0.55, px >= 2.0 ? 1.0 : 0.55);
+        c *= mix(vec3(1.0), mask, 0.55);
+        c *= 0.82 + 0.18 * sin(gl_FragCoord.y * 3.1415);
+        c *= 1.25; // compensa la máscara
+      }
       gl_FragColor = vec4(c, 1.0);
     }
   `,
@@ -130,6 +148,15 @@ export class Post {
   setBokeh(on) {
     this.bokehOn = on;
     this.bokeh.enabled = on && this.style === 'cine';
+  }
+
+  /** Variante retro: { levels, dither, sat, crt }. */
+  setRetroVariant(v) {
+    const u = this.retro.uniforms;
+    u.uLevels.value = v.levels;
+    u.uDither.value = v.dither;
+    u.uSat.value = v.sat ?? 1.0;
+    u.uCRT.value = v.crt ? 1 : 0;
   }
 
   setStyle(style) {

@@ -33,10 +33,11 @@ const CAST = [
   { kind: 'op', x: 13.5, z: 7, face: -2.25, tilt: -0.14, dance: 0.1 },         // DRONE: piloto
 ];
 
-/* Dónde cae el spotlight "jugador seleccionado" por estación. */
+/* Dónde cae el spotlight "jugador seleccionado" por estación.
+   [x, z, escala?] — la escala ensancha el haz (edición son dos). */
 export const STATION_SPOTS = {
   1: [-14.5, 19.35], 2: [7.55, -1.55], 3: [-10.3, -6.5],
-  4: [4.6, -18.4], 5: [14.5, 20.3], 6: [13.5, 7],
+  4: [4.6, -18.4], 5: [14.5, 20.3, 2.0], 6: [13.5, 7],
 };
 
 /* El piso transitable queda a y≈0.1 (pista + filo de la losa). */

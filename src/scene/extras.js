@@ -397,9 +397,12 @@ export class Extras {
     const sp = STATION_SPOTS[st];
     const w = sp ? Math.max(0, 1 - Math.abs(stationFloat - st) * 2.2) : 0;
     if (sp) {
+      const sw = sp[2] ?? 1; // haz más ancho donde hace falta (edición ×2)
       this.spot.position.set(sp[0], 6.6, sp[1]);
       this.spot.target.position.set(sp[0], 1, sp[1]);
+      this.spot.angle = 0.34 * sw;
       this.spotCone.position.set(sp[0], 6.6, sp[1]);
+      this.spotCone.scale.set(sw, 1, sw);
     }
     this.spot.intensity = 120 * w;
     this.spotConeMat.opacity = 0.025 * w;

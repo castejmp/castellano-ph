@@ -87,13 +87,9 @@ const ui = new UI({
     audio.setMuted(muted);
     return muted;
   },
-  onFXCycle() {
-    return fx.cycle();
-  },
 });
-// Estilo persistido + label inicial del botón.
+// Estética retro por defecto (variantes con teclas 1-4).
 fx.apply(fx.style);
-ui.fxBtn.textContent = `FX·${fx.style.toUpperCase()}`;
 
 // Preloader: carga REAL de los modelos de la gente (GLB). Si la red
 // falla o tarda demasiado, el público procedural queda como fallback
@@ -126,7 +122,8 @@ setInterval(() => {
       lowStreak = 0;
       if (tier === 1) {
         tier = 2;
-        renderer.setPixelRatio(Math.min(devicePixelRatio, isMobile ? 1.0 : 1.25));
+        // En retro la resolución ya es bajísima: no pisar el pixelRatio.
+        if (fx.style !== 'retro') renderer.setPixelRatio(Math.min(devicePixelRatio, isMobile ? 1.0 : 1.25));
         post?.setBokeh(false);
       } else if (tier === 2) {
         tier = 3;

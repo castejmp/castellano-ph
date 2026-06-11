@@ -1,20 +1,23 @@
 import * as THREE from 'three';
 
 /**
- * FX MANAGER — los 4 conceptos de estética, conmutables en vivo:
- *   cine  → la curada: bloom + DoF + viñeta (post.js)
- *   flat  → cel shading: materiales toon (3 bandas) + contorno negro
- *           por casco invertido en figuras y mobiliario instanciado
- *   retro → 32 bits: render interno ~480px reescalado nearest +
- *           cuantización con dithering (post.js)
- *   vhs   → la cámara del estudio: scanlines + chroma + ruido + ● REC
+ * FX MANAGER — estética RETRO por defecto, con 4 VARIANTES navegables
+ * por teclado (1-4) para elegir pixelaje y técnica:
+ *   1 · PS1 480   → 480 px, 5 bits/canal, Bayer medio (la original)
+ *   2 · PS1 320   → 320 px, 4 bits/canal, dither fuerte (más cruda)
+ *   3 · CRT       → 560 px, máscara de fósforos RGB + scanlines de tubo
+ *   4 · MD 9-BIT  → 320 px, 3 bits/canal estilo Mega Drive, saturado
  *
- * El estilo persiste en localStorage. El swap de materiales es
- * reversible (se guardan los originales) y re-aplicable cuando los
- * GLB terminan de cargar (refresh()).
+ * Los otros estilos (cine/flat/vhs) siguen implementados por si se
+ * retoman, pero no hay botón: el estilo es retro fijo.
  */
 
-export const FX_STYLES = ['cine', 'flat', 'retro', 'vhs'];
+export const RETRO_VARIANTS = [
+  { name: 'PS1 480', width: 480, levels: 31, dither: 0.9, sat: 1.0, crt: 0 },
+  { name: 'PS1 320', width: 320, levels: 15, dither: 1.1, sat: 1.0, crt: 0 },
+  { name: 'CRT', width: 560, levels: 31, dither: 0.6, sat: 1.05, crt: 1 },
+  { name: 'MD 9-BIT', width: 320, levels: 7, dither: 1.1, sat: 1.22, crt: 0 },
+];
 
 export class FXManager {
   constructor({ renderer, scene, isMobile }) {
@@ -28,40 +31,48 @@ export class FXManager {
     this._outlined = new Set();
     this._basePR = Math.min(devicePixelRatio, isMobile ? 1.5 : 2);
 
-    // Gradiente de 3 bandas para el toon.
+    // Gradiente de 3 bandas para el toon (estilo flat, sin botón).
     const grad = new Uint8Array([70, 160, 255]);
     this._gradient = new THREE.DataTexture(grad, 3, 1, THREE.RedFormat);
     this._gradient.minFilter = THREE.NearestFilter;
     this._gradient.magFilter = THREE.NearestFilter;
     this._gradient.needsUpdate = true;
 
-    let saved = 'cine';
-    try { saved = localStorage.getItem('fxStyle') || 'cine'; } catch { /* sin storage */ }
-    this.style = FX_STYLES.includes(saved) ? saved : 'cine';
+    this.style = 'retro';
+    let v = 1;
+    try { v = parseInt(localStorage.getItem('fxRetroVar') || '1', 10); } catch { /* sin storage */ }
+    this.variant = Math.min(RETRO_VARIANTS.length, Math.max(1, v || 1));
+
+    // Teclas 1-4: navegar variantes retro.
+    addEventListener('keydown', (e) => {
+      const n = parseInt(e.key, 10);
+      if (n >= 1 && n <= RETRO_VARIANTS.length) this.setVariant(n);
+    });
   }
 
-  cycle() {
-    const next = FX_STYLES[(FX_STYLES.indexOf(this.style) + 1) % FX_STYLES.length];
-    this.apply(next);
-    return next;
+  setVariant(n) {
+    this.variant = n;
+    try { localStorage.setItem('fxRetroVar', String(n)); } catch { /* sin storage */ }
+    this.apply(this.style);
+    this._toast(`RETRO ${n} · ${RETRO_VARIANTS[n - 1].name}`);
   }
 
   apply(style) {
     this.style = style;
-    try { localStorage.setItem('fxStyle', style); } catch { /* sin storage */ }
     document.body.dataset.fx = style;
 
-    // Materiales y contornos.
     if (style === 'flat') this._toonify();
     else this._restore();
     for (const h of this._outlines) h.visible = style === 'flat';
 
-    // Resolución interna: retro renderiza a ~480 px de ancho.
+    // Resolución interna según la variante retro activa.
+    const cfg = RETRO_VARIANTS[this.variant - 1];
     const pr = style === 'retro'
-      ? Math.min(0.5, Math.max(0.18, 480 / innerWidth))
+      ? Math.min(0.6, Math.max(0.12, cfg.width / innerWidth))
       : this._basePR;
     this.renderer.setPixelRatio(pr);
 
+    this.post?.setRetroVariant(cfg);
     this.post?.setStyle(style);
     this.post?.setSize(innerWidth, innerHeight);
   }
@@ -69,6 +80,19 @@ export class FXManager {
   /** Re-aplica el estilo (p. ej. cuando los GLB cargan tarde). */
   refresh() {
     this.apply(this.style);
+  }
+
+  _toast(text) {
+    let t = document.querySelector('.fx-toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.className = 'fx-toast mono';
+      document.body.appendChild(t);
+    }
+    t.textContent = text;
+    t.classList.remove('show');
+    void t.offsetWidth;
+    t.classList.add('show');
   }
 
   _toonify() {
@@ -90,8 +114,6 @@ export class FXManager {
       this._toon.set(o, t);
       o.material = t;
 
-      // Contorno por casco invertido: solo instanciados (figuras,
-      // mesas, livings, DJ) — el salón estático no lo necesita.
       if (o.isInstancedMesh && !this._outlined.has(o)) {
         this._outlined.add(o);
         const om = new THREE.MeshBasicMaterial({ color: '#050508', side: THREE.BackSide });
