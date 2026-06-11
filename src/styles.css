@@ -48,7 +48,7 @@ button { font: inherit; cursor: pointer; }
   padding: 0.9rem 1.25rem;
   font-size: 0.72rem; text-transform: uppercase;
 }
-.nav .wordmark { font-weight: 800; letter-spacing: 0.22em; font-size: 0.78rem; }
+.nav .wordmark img { height: 26px; display: block; opacity: 0.95; }
 .nav .right { display: flex; align-items: center; gap: 1rem; }
 .nav .clock { opacity: 0.55; }
 .nav .mode-btn {

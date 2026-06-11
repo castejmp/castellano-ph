@@ -1,4 +1,5 @@
 import { CONFIG } from '../config.js';
+import { wordmarkCanvas } from '../scene/brand.js';
 
 /**
  * EL OVERLAY — todo el HTML vive acá, fuera del canvas.
@@ -21,7 +22,7 @@ export class UI {
     /* Nav */
     const nav = el('nav', 'nav');
     nav.innerHTML = `
-      <span class="wordmark">${CONFIG.studio}</span>
+      <span class="wordmark"><img alt="${CONFIG.studio}" /></span>
       <div class="right mono">
         <span class="hud" data-hud>SHOT 01/09 · ${S[0].name}</span>
         <span class="clock" data-clock></span>
@@ -30,6 +31,8 @@ export class UI {
         </button>
         <button class="mode-btn" data-mode-btn type="button">MODO</button>
       </div>`;
+    // El logo calcado también en la nav (mismo dibujo que el piso).
+    nav.querySelector('.wordmark img').src = wordmarkCanvas().toDataURL();
     this.hud = nav.querySelector('[data-hud]');
     this.clockEl = nav.querySelector('[data-clock]');
     this.modeBtn = nav.querySelector('[data-mode-btn]');
@@ -61,7 +64,6 @@ export class UI {
     hero.innerHTML = `
       <div>
         <h1><span class="pre">BIENVENIDO A</span>TU EVENTO</h1>
-        <p>${CONFIG.tagline}</p>
         <div class="hint mono">NAVEGÁ PARA DESCUBRIR QUÉ HACEMOS</div>
       </div>`;
     this.hero = hero;
