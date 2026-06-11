@@ -89,13 +89,14 @@ function buildIconAtlas() {
     c.fillText(s, 128, y);
   };
 
-  // 0 · |o| — la marca (proporciones del logo original: barras y aro
-  // de la misma altura, trazo grueso parejo).
+  // 0 · |o| — la marca, calcada: barras 0.24H, aro 0.26H, gaps 0.18H.
   inCell(0, () => {
-    c.fillRect(46, 70, 26, 116);
-    c.fillRect(184, 70, 26, 116);
-    c.lineWidth = 26;
-    c.beginPath(); c.arc(128, 128, 45, 0, Math.PI * 2); c.stroke();
+    const H = 130, bar = 31, lw = 34, gap = 23;
+    const y = 128 - H / 2;
+    c.lineWidth = lw;
+    c.beginPath(); c.arc(128, 128, (H - lw) / 2, 0, Math.PI * 2); c.stroke();
+    c.fillRect(128 - H / 2 - gap - bar, y, bar, H);
+    c.fillRect(128 + H / 2 + gap, y, bar, H);
   });
   // 1 · Ai — diseño.
   inCell(1, () => {
