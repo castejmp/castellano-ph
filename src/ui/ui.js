@@ -1,5 +1,5 @@
 import { CONFIG } from '../config.js';
-import { wordmarkCanvas } from '../scene/brand.js';
+import { wordmarkCanvas, loadBrandGlyph } from '../scene/brand.js';
 
 /**
  * EL OVERLAY — todo el HTML vive acá, fuera del canvas.
@@ -119,7 +119,7 @@ export class UI {
     const gate = el('div', 'gate');
     gate.innerHTML = `
       <div class="inner">
-        <div class="word mono">${CONFIG.studio}</div>
+        <div class="word"><img alt="${CONFIG.studio}" /></div>
         <div class="bar"><i data-bar></i></div>
         <h2 class="q">¿Qué celebramos?</h2>
         <div class="choices">
@@ -131,6 +131,16 @@ export class UI {
         <div class="sound">LA EXPERIENCIA SUENA · SUBÍ EL VOLUMEN</div>
       </div>`;
     this.gate = gate;
+    // El logo calcado preside el selector de evento.
+    gate.querySelector('.word img').src = wordmarkCanvas().toDataURL();
+    // Si está el PNG real (public/brand/wordmark.png), pisa al calco
+    // en nav y gate (recoloreado a blanco sobre transparente).
+    loadBrandGlyph(`${import.meta.env.BASE_URL}brand/wordmark.png`).then((b) => {
+      if (!b) return;
+      const url = b.image.toDataURL();
+      nav.querySelector('.wordmark img').src = url;
+      gate.querySelector('.word img').src = url;
+    });
     this.gateBar = gate.querySelector('[data-bar]');
     gate.querySelectorAll('[data-choice]').forEach((b) => {
       b.addEventListener('click', () => {

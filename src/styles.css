@@ -230,7 +230,7 @@ button { font: inherit; cursor: pointer; }
 }
 .gate.leaving { opacity: 0; pointer-events: none; }
 .gate .inner { padding: 1.5rem; }
-.gate .word { font-size: 0.74rem; font-weight: 800; letter-spacing: 0.3em; opacity: 0.65; }
+.gate .word img { height: 34px; display: block; margin: 0 auto; opacity: 0.9; }
 .gate .bar {
   width: min(220px, 60vw); height: 2px; margin: 1.6rem auto;
   background: rgba(255, 255, 255, 0.12); overflow: hidden; border-radius: 2px;
