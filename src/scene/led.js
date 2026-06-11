@@ -167,15 +167,30 @@ export class LedWall {
       uB: { value: new THREE.Color('#5e0716') },
       uC: { value: new THREE.Color('#ffd166') },
     };
-    const mesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(size[0], size[1]),
-      new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: FRAG, uniforms: this.uniforms })
-    );
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: VERT, fragmentShader: FRAG, uniforms: this.uniforms,
+      side: THREE.DoubleSide, // las curvas se ven desde adentro
+    });
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(size[0], size[1]), mat);
     mesh.position.set(...pos);
     mesh.matrixAutoUpdate = false;
     mesh.updateMatrix();
     scene.add(mesh);
     this.mesh = mesh;
+
+    // Pantallas CURVAS en las esquinas: comparten material y uniforms,
+    // así reaccionan exactamente igual que la principal.
+    for (const sign of [-1, 1]) {
+      const arc = new THREE.CylinderGeometry(
+        3.5, 3.5, size[1], 14, 1, true,
+        sign > 0 ? Math.PI - 0.95 : Math.PI, 0.95
+      );
+      const corner = new THREE.Mesh(arc, mat);
+      corner.position.set(sign * 10, pos[1], -18.6);
+      corner.matrixAutoUpdate = false;
+      corner.updateMatrix();
+      scene.add(corner);
+    }
     this._icon = 0;
   }
 

@@ -49,6 +49,11 @@ export const ANCHORS = {
 
 export function buildWorld(scene) {
   const parts = [];
+  // Utilería procedural que los GLB reemplazan al cargar (mesas, cabina DJ):
+  // va en meshes aparte para poder sacarla de escena.
+  const partsTables = [];
+  const partsDJ = [];
+  let target = parts;
   const col = new THREE.Color();
 
   /** Pinta una geometría con un color plano y la apila para el merge. */
@@ -61,7 +66,7 @@ export function buildWorld(scene) {
       arr[i * 3] = col.r; arr[i * 3 + 1] = col.g; arr[i * 3 + 2] = col.b;
     }
     g.setAttribute('color', new THREE.BufferAttribute(arr, 3));
-    parts.push(g);
+    target.push(g);
   }
 
   function box(w, h, d, hex, x, y, z, ry = 0) {
@@ -87,13 +92,15 @@ export function buildWorld(scene) {
   box(0.6, 8, 20, '#15151a', 29, 4, -8);
   box(0.6, 8, 20, '#15151a', -29, 4, -8);
 
-  /* ── Tarima + cabina DJ (el DJ va arriba, visible) ── */
+  /* ── Tarima + cabina DJ (la cabina la reemplaza dj.glb) ── */
   box(4.6, 0.5, 2.2, '#17171c', 0, 0.25, -19.4); // tarima
+  target = partsDJ;
   box(4.2, 1.1, 1.0, '#1d1d23', 0, 1.05, -18.7); // cabina
   box(3.6, 0.14, 0.85, '#101014', 0, 1.66, -18.7); // tapa
   box(0.62, 0.1, 0.5, '#2c2c34', -1.05, 1.76, -18.7); // deck izq
   box(0.62, 0.1, 0.5, '#2c2c34', 1.05, 1.76, -18.7); // deck der
   box(0.5, 0.07, 0.36, '#34343e', 0, 1.74, -18.65); // mixer
+  target = parts;
   box(0.95, 1.95, 0.95, '#121216', -7.6, 0.97, -18.4); // PA izq
   box(0.95, 1.95, 0.95, '#121216', 7.6, 0.97, -18.4); // PA der
   cyl(0.26, 0.26, 0.1, 10, '#08080a', -7.6, 1.45, -17.87, 0, Math.PI / 2);
@@ -125,7 +132,8 @@ export function buildWorld(scene) {
     box(1.3, 0.1, 0.14, '#101014', sx, sy, sz); // barra de strobo
   }
 
-  /* ── Mesas redondas con mantel + sillas (zona sur) ── */
+  /* ── Mesas redondas con mantel + sillas (las reemplaza mesas.glb) ── */
+  target = partsTables;
   for (const [tx, tz] of TABLES) {
     cyl(1.05, 1.2, 0.78, 9, '#d6cebc', tx, 0.39, tz);
     cyl(1.22, 1.22, 0.07, 9, '#e6dfd0', tx, 0.81, tz);
@@ -138,6 +146,7 @@ export function buildWorld(scene) {
       box(0.42, 0.55, 0.08, '#55504a', cx - Math.cos(a) * 0.2, 0.72, cz - Math.sin(a) * 0.2, -a + Math.PI / 2);
     }
   }
+  target = parts;
 
   /* ── Barra al borde sur ── */
   box(9, 1.12, 1.15, '#33333b', 0, 0.56, 19.6);
@@ -180,23 +189,8 @@ export function buildWorld(scene) {
   // El escritorio de EDICIÓN ya no existe acá: el modelo del editor
   // trae su propia mesa y PC.
 
-  /* ── Set de FOTOGRAFÍA (utilería, rincón este) ── */
-  const bdRy = -0.99;
-  box(4.4, 3.3, 0.1, '#cfcbc2', 23.9, 1.66, -14.3, bdRy);
-  box(4.6, 0.16, 0.7, '#2c2c34', 23.9, 0.06, -14.3, bdRy);
-  for (const [sx, sz, sr] of [[21.0, -10.8, -0.6], [25.4, -11.6, -1.45]]) {
-    cyl(0.045, 0.06, 2.3, 6, '#2a2a32', sx, 1.15, sz);
-    cyl(0.4, 0.46, 0.1, 7, '#22222a', sx, 0.04, sz);
-    box(0.78, 0.78, 0.3, '#e8e8e4', sx, 2.42, sz, sr);
-  }
-  for (let l = 0; l < 3; l++) {
-    const a = (l / 3) * Math.PI * 2;
-    cyl(0.025, 0.035, 1.5, 5, '#33333b', 21.9 + Math.cos(a) * 0.3, 0.72, -12.5 + Math.sin(a) * 0.3, Math.cos(a) * 0.36, Math.sin(a) * 0.36);
-  }
-  box(0.36, 0.24, 0.3, '#16161c', 21.9, 1.45, -12.5, bdRy);
-  cyl(0.07, 0.09, 0.16, 8, '#0c0c10', 21.9, 1.45, -12.32, 0, Math.PI / 2);
-
-  // Las cámaras del fotógrafo y del filmmaker vienen en sus modelos GLB.
+  // El set de fotografía salió de escena: los fotógrafos trabajan
+  // entre la gente y sus cámaras vienen en los modelos GLB.
 
   /* ── Consola VJ junto a la cabina (VISUALES) ──
      El VJ está al NORTE de la mesa: los monitores van al borde SUR,
@@ -220,15 +214,19 @@ export function buildWorld(scene) {
   box(0.22, 0.06, 0.15, '#1c1c22', 13.22, 0.97, 6.78, -2.25);
   cyl(0.008, 0.008, 0.22, 4, '#44444e', 13.18, 1.12, 6.74);
 
-  /* ── Merge: todo lo estático en un draw call ── */
-  const merged = mergeGeometries(parts);
-  merged.computeVertexNormals();
-  const statics = new THREE.Mesh(
-    merged,
-    new THREE.MeshLambertMaterial({ vertexColors: true })
-  );
-  statics.matrixAutoUpdate = false;
-  scene.add(statics);
+  /* ── Merge: estáticos + dos meshes removibles (mesas, cabina DJ) ── */
+  const mat = new THREE.MeshLambertMaterial({ vertexColors: true });
+  const mkMesh = (list) => {
+    const g = mergeGeometries(list);
+    g.computeVertexNormals();
+    const m = new THREE.Mesh(g, mat);
+    m.matrixAutoUpdate = false;
+    scene.add(m);
+    return m;
+  };
+  const statics = mkMesh(parts);
+  const tablesMesh = mkMesh(partsTables);
+  const djMesh = mkMesh(partsDJ);
 
   /* ── Pista de baile (textura damero, 1 draw call) ── */
   const cnv = document.createElement('canvas');
@@ -252,5 +250,5 @@ export function buildWorld(scene) {
   dance.updateMatrix();
   scene.add(dance);
 
-  return { statics, dance };
+  return { statics, dance, tablesMesh, djMesh };
 }

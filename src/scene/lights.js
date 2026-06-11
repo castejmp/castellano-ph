@@ -41,9 +41,7 @@ export class LightRig {
     this.editLamp.position.set(8.6, 2.7, 18.6);
     scene.add(this.editLamp);
 
-    this.photoLamp = new THREE.PointLight('#f4f0e6', 10, 11, 1.6);
-    this.photoLamp.position.set(22.4, 3.1, -12.2);
-    scene.add(this.photoLamp);
+    // (El set de fotografía salió de escena: su lámpara también.)
   }
 
   /** Lo llama el ThemeEngine con el estado YA interpolado. */

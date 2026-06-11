@@ -31,7 +31,7 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(CONFIG.shots[0].fov, innerWidth / innerHeight, 0.1, 240);
 
 /* ── Mundo ──────────────────────────────────────── */
-buildWorld(scene);
+const world = buildWorld(scene);
 const crowd = new Crowd(scene, isMobile);
 const led = new LedWall(scene);
 const extras = new Extras(scene);
@@ -89,7 +89,10 @@ const ui = new UI({
 ui.gateProgress(0.06);
 const glbTimeout = setTimeout(() => ui.gateProgress(1), 25_000);
 crowd
-  .upgradeFromGLB(import.meta.env.BASE_URL, (p) => ui.gateProgress(0.06 + p * 0.9))
+  .upgradeFromGLB(import.meta.env.BASE_URL, (p) => ui.gateProgress(0.06 + p * 0.9), {
+    dj: world.djMesh,
+    tables: world.tablesMesh,
+  })
   .catch((e) => console.warn('GLB no disponible, queda el público procedural:', e))
   .finally(() => {
     clearTimeout(glbTimeout);
