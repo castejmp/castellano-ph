@@ -33,8 +33,8 @@ export const ANCHORS = {
     { pos: [28.55, 4, -8], size: [19.4, 7.4], ry: -Math.PI / 2 },
     { pos: [-28.55, 4, -8], size: [19.4, 7.4], ry: Math.PI / 2 },
   ],
-  // El flash dispara donde está el fotógrafo: al borde sur de la pista.
-  flashAt: [7.4, 1.7, -1.7],
+  // El flash dispara entre los dos fotógrafos, al borde sur de la pista.
+  flashAt: [7.55, 1.7, -1.55],
   // Parrilla de luces: cabezales móviles, washes y strobos.
   rig: {
     heads: [[-5.5, 5.8, -6.5], [5.5, 5.8, -6.5], [-5.5, 5.8, -13], [5.5, 5.8, -13]],

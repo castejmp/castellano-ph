@@ -16,6 +16,15 @@ export const CONFIG = {
   // Brand bar — intocable.
   brandBar: ['#f63f2f', '#fe720c', '#feca0d', '#7fc527', '#1f93e0'],
 
+  // Placa final centrada (estación 8), espejo de la bienvenida.
+  finale: {
+    kicker: 'FINALMENTE',
+    map: 'Lo que recorriste es un mapa — ya sabés cómo llegar.',
+    pre: 'ESTAMOS',
+    title: 'LISTOS PARA EMPEZAR',
+    verMas: 'VER MÁS',
+  },
+
   /* ──────────────────────────────────────────────
    * LAS 9 ESTACIONES — copy de cards.
    * Voz: español argentino, primera persona, frases cortas, cero humo.

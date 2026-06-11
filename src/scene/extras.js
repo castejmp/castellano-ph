@@ -214,11 +214,14 @@ export class Extras {
     this.dronePos = new THREE.Vector3();
     scene.add(this.drone);
 
-    /* ── Flash real (donde está el fotógrafo, entre la gente) ── */
+    /* ── Flash real de los fotógrafos ── */
     this.flash = new THREE.PointLight('#ffffff', 0, 40, 1.6);
     this.flash.position.set(...ANCHORS.flashAt);
     scene.add(this.flash);
     this.flashEnergy = 0;
+    // Destellos aleatorios tipo paparazzi: los dos fotógrafos disparan
+    // cada tanto, alternando posición e intensidad.
+    this._nextFlash = 2 + Math.random() * 3;
 
     // La pantalla de edición ya no hace falta: el modelo GLB del editor
     // viene con su propia PC.
@@ -329,7 +332,15 @@ export class Extras {
     this.drone.rotation.z = Math.sin(t * 0.42) * 0.12;
     this.droneLight.intensity = 2 + ((t * 2) % 1 > 0.5 ? 3 : 0);
 
-    // Flash del fotógrafo.
+    // Flashes aleatorios de los fotógrafos (paparazzi): cada 2-6 s,
+    // alternando entre los dos y con intensidad variable.
+    this._nextFlash -= dt;
+    if (this._nextFlash <= 0) {
+      const [fx, fy, fz] = ANCHORS.flashAt;
+      this.flash.position.set(fx + (Math.random() < 0.5 ? -0.45 : 0.45), fy, fz + (Math.random() - 0.5) * 0.4);
+      this.flashEnergy = Math.max(this.flashEnergy, 0.35 + Math.random() * 0.45);
+      this._nextFlash = 2 + Math.random() * 4;
+    }
     if (this.flashEnergy > 0.001) {
       this.flash.intensity = this.flashEnergy * 1600;
       this.flashEnergy *= Math.pow(0.000001, dt);

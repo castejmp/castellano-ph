@@ -122,6 +122,42 @@ button { font: inherit; cursor: pointer; }
 }
 @keyframes bob { 50% { transform: translateY(7px); } }
 
+/* ── Placa final (estación 8, espejo de la bienvenida) ── */
+.finale {
+  position: fixed; inset: 0; z-index: 25;
+  display: grid; place-items: center; text-align: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+}
+.finale .kicker { font-size: 0.7rem; letter-spacing: 0.3em; color: var(--accent); text-transform: uppercase; }
+.finale .map { margin-top: 0.9rem; font-size: clamp(0.9rem, 2.2vw, 1.15rem); opacity: 0.75; }
+.finale h2 {
+  margin-top: 1.6rem;
+  font-size: clamp(2.4rem, 8.5vw, 6.5rem);
+  font-weight: 850; letter-spacing: -0.03em; line-height: 0.95;
+  text-shadow: 0 6px 60px rgba(0, 0, 0, 0.6);
+}
+.finale h2 .pre { display: block; font-size: 0.5em; letter-spacing: 0.02em; opacity: 0.92; }
+.finale .ctas {
+  margin-top: 2.4rem;
+  display: flex; gap: 0.9rem; justify-content: center; align-items: center; flex-wrap: wrap;
+}
+.finale .cta {
+  background: var(--accent); color: #fff; text-decoration: none;
+  font-weight: 800; letter-spacing: 0.18em; font-size: 0.82rem;
+  padding: 0.85rem 2rem; border-radius: 999px;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+.finale .cta:hover { transform: scale(1.05); box-shadow: 0 0 40px -6px var(--accent); }
+.finale .ghost {
+  background: transparent; color: var(--paper); text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 999px;
+  font-weight: 700; letter-spacing: 0.16em; font-size: 0.74rem;
+  padding: 0.85rem 1.6rem; text-transform: uppercase;
+  transition: border-color 0.3s, color 0.3s;
+}
+.finale .ghost:hover { border-color: var(--accent); color: var(--accent); }
+
 /* ── Cards por estación ─────────────────────────── */
 .card {
   position: fixed; top: 50%; left: 9vw; z-index: 30;

@@ -80,8 +80,26 @@ export class UI {
         ` : ''}`;
       return c;
     });
-    // La estación 0 usa el hero, no card.
+    // La estación 0 usa el hero y la 8 la placa final: sin card.
     this.cards[0].style.display = 'none';
+    this.cards[8].style.display = 'none';
+
+    /* Placa final centrada (espejo de la bienvenida) */
+    const F = CONFIG.finale;
+    const finale = el('div', 'finale');
+    finale.innerHTML = `
+      <div>
+        <div class="kicker mono">${F.kicker}</div>
+        <p class="map">${F.map}</p>
+        <h2><span class="pre">${F.pre}</span>${F.title}</h2>
+        <div class="ctas">
+          <a class="cta" href="${CONFIG.whatsapp}" target="_blank" rel="noopener">HABLEMOS</a>
+          <a class="ghost" href="${CONFIG.instagram}" target="_blank" rel="noopener">${CONFIG.instagramLabel}</a>
+          <button class="ghost" type="button" data-ver>${F.verMas}</button>
+        </div>
+      </div>`;
+    finale.querySelector('[data-ver]').addEventListener('click', () => onDot(0));
+    this.finale = finale;
 
     /* Flash de fotografía */
     this.flashEl = el('div', 'flash');
@@ -117,7 +135,7 @@ export class UI {
       });
     });
 
-    root.append(bb, hero, ...this.cards, dots, nav, this.flashEl, footer, gate);
+    root.append(bb, hero, ...this.cards, finale, dots, nav, this.flashEl, footer, gate);
 
     /* Reloj */
     const tick = () => {
@@ -141,14 +159,17 @@ export class UI {
     this.modeBtn.textContent = CONFIG.modes[name].label;
   }
 
-  /** f: estación flotante 0..8 — maneja cards, dots, HUD y hero. */
+  /** f: estación flotante 0..8 — maneja cards, dots, HUD, hero y final. */
   setStation(f) {
     const r = Math.round(f);
     this.cards.forEach((c, i) => {
-      c.classList.toggle('show', i > 0 && Math.abs(f - i) < 0.38);
+      c.classList.toggle('show', i > 0 && i < 8 && Math.abs(f - i) < 0.38);
     });
     this.dotEls.forEach((d, i) => d.classList.toggle('active', i === r));
     this.hero.style.opacity = Math.max(0, 1 - f * 1.7);
+    const fw = Math.min(1, Math.max(0, (f - 7.45) / 0.45));
+    this.finale.style.opacity = fw;
+    this.finale.style.pointerEvents = fw > 0.6 ? 'auto' : 'none';
 
     if (r !== this._shot) {
       this._shot = r;
