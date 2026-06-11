@@ -30,8 +30,8 @@ export const ANCHORS = {
   led: { pos: [0, 4.8, -22.1], size: [20, 8] },
   mapping: [
     { pos: [0, 5.1, -22.35], size: [56, 9.4], ry: 0 },
-    { pos: [28.55, 5.1, -8], size: [19.4, 9.4], ry: -Math.PI / 2 },
-    { pos: [-28.55, 5.1, -8], size: [19.4, 9.4], ry: Math.PI / 2 },
+    { pos: [28.55, 5.1, -10.1], size: [24, 9.4], ry: -Math.PI / 2 },
+    { pos: [-28.55, 5.1, -10.1], size: [24, 9.4], ry: Math.PI / 2 },
   ],
   // El flash dispara entre los dos fotógrafos, al borde sur de la pista.
   flashAt: [7.55, 1.7, -1.55],
@@ -94,10 +94,11 @@ export function buildWorld(scene) {
   box(58.6, 2, 46, '#26262d', 0, -1, 0);
   box(58.9, 0.14, 46.3, '#3a3a44', 0, 0.02, 0); // filo del borde
 
-  /* ── Paredes escenográficas (misma altura las tres: 10.4) ── */
+  /* ── Paredes escenográficas: misma altura (10.4) y esquinas
+     CERRADAS — las laterales llegan hasta la pared de fondo ── */
   box(58, 10.4, 0.6, '#15151a', 0, 5.2, -22.7);
-  box(0.6, 10.4, 20, '#15151a', 29, 5.2, -8);
-  box(0.6, 10.4, 20, '#15151a', -29, 5.2, -8);
+  box(0.6, 10.4, 24.6, '#15151a', 29, 5.2, -10.1);
+  box(0.6, 10.4, 24.6, '#15151a', -29, 5.2, -10.1);
 
   /* ── Tarima + cabina DJ (la cabina la reemplaza dj.glb) ── */
   box(4.6, 0.5, 2.2, '#17171c', 0, 0.25, -19.4); // tarima

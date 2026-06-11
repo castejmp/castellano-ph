@@ -132,8 +132,8 @@ export const CONFIG = {
       theme: {
         // Ambiente neutro oscuro; el ROJO vive en key/wash/LED/beams.
         bg: '#070104', fog: '#0b0407', fogDensity: 0.010,
-        // Ambiente ~30: el entorno se lee sin perder el dramatismo.
-        hemiSky: '#4a3a40', hemiGround: '#141014', hemiI: 1.35,
+        // Ambiente ~35: el entorno se lee sin perder el dramatismo.
+        hemiSky: '#4a3a40', hemiGround: '#141014', hemiI: 1.6,
         key: '#ff2330', keyI: 1000, wash: '#e0334e', washI: 420,
         practical: '#ffac63', practicalI: 85, // contrapunto dorado
         led: ['#ff2b2b', '#47060e', '#ffe9c4'], // highlight casi blanco
@@ -159,8 +159,8 @@ export const CONFIG = {
       theme: {
         // Marfil con acentos ORO/ÁMBAR. Ambiente ~50-60 (antes 100):
         // atardecer dorado, no mediodía.
-        bg: '#d6cdb8', fog: '#dcd3be', fogDensity: 0.006,
-        hemiSky: '#f2e8d2', hemiGround: '#8f7c5c', hemiI: 1.15,
+        bg: '#cfc5ae', fog: '#d5cab2', fogDensity: 0.006,
+        hemiSky: '#f2e8d2', hemiGround: '#8f7c5c', hemiI: 0.95,
         key: '#ffe3ae', keyI: 1350, wash: '#ffedce', washI: 620,
         practical: '#ffc06a', practicalI: 60,
         // [principal, BASE OSCURA, highlight] — oro, ámbar profundo, marfil.
@@ -188,7 +188,7 @@ export const CONFIG = {
         // Azul más neutro (nada de cian en el ambiente: mata las pieles)
         // + practicals cálidos. Ambiente ~30, como quince.
         bg: '#020609', fog: '#04080f', fogDensity: 0.008,
-        hemiSky: '#43506b', hemiGround: '#10141c', hemiI: 1.5,
+        hemiSky: '#43506b', hemiGround: '#10141c', hemiI: 1.75,
         key: '#3d8fe0', keyI: 1100, wash: '#7fb4ff', washI: 420,
         practical: '#ffd9a8', practicalI: 72, // contrapunto cálido (pieles)
         led: ['#1f93e0', '#06223c', '#eaf6ff'],
