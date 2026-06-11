@@ -35,8 +35,8 @@ const CAST = [
 
 /* Dónde cae el spotlight "jugador seleccionado" por estación. */
 export const STATION_SPOTS = {
-  1: [-8.5, 19.35], 2: [7.5, -1.5], 3: [-10.3, -6.5],
-  4: [4.6, -18.4], 5: [8.6, 18.4], 6: [13.5, 7],
+  1: [-8.5, 19.35], 2: [7.55, -1.55], 3: [-10.3, -6.5],
+  4: [4.6, -18.4], 5: [8.6, 20.3], 6: [13.5, 7],
 };
 
 /* El piso transitable queda a y≈0.1 (pista + filo de la losa). */
@@ -58,19 +58,20 @@ const SINGLE = Math.PI;
 // que la relación operadores/invitados/mesas cierre.
 const OP_H = 1.55;
 const FIGURE_FILES = [
-  // FOTOGRAFÍA: dos fotógrafos al borde sur, APUNTANDO AL CENTRO de la pista.
-  { file: 'photographer.glb', rot: SINGLE, height: OP_H, slots: [{ x: 6.7, z: -1.3, face: -2.43 }] },
-  { file: 'photographer-women.glb', rot: SINGLE, height: OP_H, slots: [{ x: 8.4, z: -1.8, face: -2.28 }] },
-  // VIDEO: camarógrafo al borde oeste, apuntando al centro.
-  { file: 'cameraoperator.glb', rot: SINGLE, height: OP_H, slots: [{ x: -10.3, z: -6.5, face: 1.81 }] },
-  // EDICIÓN: los dos editores con su mesa (es escena single: mira a -z).
-  { file: 'editores.glb', rot: SINGLE, slots: [{ x: 8.6, z: 18.4, face: Math.PI }], height: 1.5 },
-  // VISUALES: el VJ en su consola (toy ↔ worker estaban invertidos).
-  { file: 'toy.glb', rot: SINGLE, height: OP_H, slots: [{ x: 4.6, z: -18.4, face: 0 }] },
-  // DISEÑO: el diseñador en su mesa junto a la barra.
-  { file: 'worker.glb', rot: SINGLE, height: OP_H, slots: [{ x: -8.5, z: 19.35, face: Math.PI }] },
-  // DJ con su mixer en la tarima (reemplaza la cabina procedural).
-  { file: 'dj.glb', rot: SINGLE, height: 1.6, slots: [{ x: 0, y: 0.4, z: -19.0, face: Math.PI }], removes: 'dj', zeroOp: 4 },
+  // FOTOGRAFÍA: dos fotógrafos JUNTOS al borde sur (un solo spot los baña),
+  // apuntando al centro de la pista.
+  { file: 'photographer.glb', rot: SINGLE, height: OP_H, slots: [{ x: 7.1, z: -1.4, face: -2.39 }] },
+  { file: 'photographer-women.glb', rot: SINGLE, height: OP_H, slots: [{ x: 8.0, z: -1.7, face: -2.31 }] },
+  // VIDEO: camarógrafo al borde oeste, apuntando hacia la barra.
+  { file: 'cameraoperator.glb', rot: SINGLE, height: OP_H, slots: [{ x: -10.3, z: -6.5, face: 0.38 }] },
+  // EDICIÓN: los dos editores con su mesa, pegados a la pared sur.
+  { file: 'editores.glb', rot: SINGLE, slots: [{ x: 8.6, z: 20.3, face: Math.PI }], height: 1.5 },
+  // VISUALES: el VJ en su consola (90° antihorario).
+  { file: 'toy.glb', rot: SINGLE, height: OP_H, slots: [{ x: 4.6, z: -18.4, face: Math.PI / 2 }] },
+  // DISEÑO: el diseñador en su mesa (90° a su izquierda → mira al oeste).
+  { file: 'worker.glb', rot: SINGLE, height: OP_H, slots: [{ x: -8.5, z: 19.35, face: -Math.PI / 2 }] },
+  // DJ con su mixer en la tarima (90° horario desde el norte → este).
+  { file: 'dj.glb', rot: SINGLE, height: 1.6, slots: [{ x: 0, y: 0.4, z: -19.0, face: Math.PI / 2 }], removes: 'dj', zeroOp: 4 },
   // Mesa redonda + living (2 grupos en un archivo): sector de mesas al
   // sur + sector de livings al sureste. Reemplazan a los procedurales.
   {

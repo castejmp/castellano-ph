@@ -60,9 +60,9 @@ export class UI {
     const hero = el('div', 'hero-title');
     hero.innerHTML = `
       <div>
-        <h1>TU<br>EVENTO</h1>
+        <h1><span class="pre">BIENVENIDO A</span>TU EVENTO</h1>
         <p>${CONFIG.tagline}</p>
-        <div class="hint mono">SCROLLEÁ — LA CÁMARA ES TUYA</div>
+        <div class="hint mono">NAVEGÁ PARA DESCUBRIR QUÉ HACEMOS</div>
       </div>`;
     this.hero = hero;
 

@@ -178,15 +178,18 @@ export class LedWall {
     scene.add(mesh);
     this.mesh = mesh;
 
-    // Pantallas CURVAS en las esquinas: comparten material y uniforms,
-    // así reaccionan exactamente igual que la principal.
+    // Pantallas CURVAS en las ESQUINAS del salón: mismo ancho de arco
+    // que la principal (20 m) en un cuarto de vuelta, abrazando cada
+    // esquina (separadas de la central). Comparten material y uniforms:
+    // reaccionan exactamente igual.
+    const R = 20 / (Math.PI / 2); // ≈12.7: arco de 20 m en 90°
     for (const sign of [-1, 1]) {
       const arc = new THREE.CylinderGeometry(
-        3.5, 3.5, size[1], 14, 1, true,
-        sign > 0 ? Math.PI - 0.95 : Math.PI, 0.95
+        R, R, size[1], 24, 1, true,
+        sign > 0 ? Math.PI / 2 : Math.PI, Math.PI / 2
       );
       const corner = new THREE.Mesh(arc, mat);
-      corner.position.set(sign * 10, pos[1], -18.6);
+      corner.position.set(sign * 15.77, pos[1], -9.47);
       corner.matrixAutoUpdate = false;
       corner.updateMatrix();
       scene.add(corner);
