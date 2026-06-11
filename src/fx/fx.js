@@ -49,10 +49,13 @@ export class FXManager {
     else this._restore();
     for (const h of this._outlines) h.visible = style === 'flat';
 
-    // Resolución interna según la variante retro activa.
+    // Resolución interna según la variante retro activa. En desktop el
+    // ancho objetivo sube ~55%: con 480 fijos el píxel quedaba gigante
+    // en monitores grandes (en el celu 480 ya es casi nativo).
     const cfg = RETRO_VARIANTS[this.variant - 1];
+    const targetW = this.isMobile ? cfg.width : Math.round(cfg.width * 1.55);
     const pr = style === 'retro'
-      ? Math.min(0.6, Math.max(0.12, cfg.width / innerWidth))
+      ? Math.min(0.6, Math.max(0.12, targetW / innerWidth))
       : this._basePR;
     this.renderer.setPixelRatio(pr); // camino sin composer (móvil)
     this.post?.setPixelRatio(pr);    // el composer captura el suyo propio
