@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { TABLES } from './world.js';
+import { TABLES, LOUNGES } from './world.js';
 import {
   buildGuestMale, buildGuestFemale, buildOperator, buildOperatorSeated,
 } from './figure.js';
@@ -72,20 +72,13 @@ const FIGURE_FILES = [
   { file: 'worker.glb', rot: SINGLE, height: OP_H, slots: [{ x: -8.5, z: 19.35, face: -Math.PI / 2 }] },
   // DJ con su mixer en la tarima (90° horario desde el norte → este).
   { file: 'dj.glb', rot: SINGLE, height: 1.6, slots: [{ x: 0, y: 0.4, z: -19.0, face: Math.PI / 2 }], removes: 'dj', zeroOp: 4 },
-  // Mesa redonda + living (2 grupos en un archivo): sector de mesas al
-  // sur + sector de livings al sureste. Reemplazan a los procedurales.
+  // Mesa redonda + living (2 grupos en un archivo): 6 mesas entre la
+  // pista y la barra + 6 livings en los laterales del salón.
   {
     file: 'mesas.glb', path: 'mesas.glb', removes: 'tables',
     place: [
-      { fig: 0, height: 1.0, slots: TABLES.map(([x, z], i) => ({ x, z, face: i * 1.3 })) },
-      {
-        fig: 1, height: 0.85,
-        slots: [
-          { x: 18.2, z: 13.8, face: -2.2 },
-          { x: 15.0, z: 17.2, face: -2.8 },
-          { x: 21.2, z: 16.4, face: -2.4 },
-        ],
-      },
+      { fig: 0, height: 1.3, slots: TABLES.map(([x, z], i) => ({ x, z, face: i * 1.3 })) },
+      { fig: 1, height: 0.85, slots: LOUNGES },
     ],
   },
 ];

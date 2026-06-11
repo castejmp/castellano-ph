@@ -14,9 +14,16 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
  *   set de fotos (utilería) en el rincón este.
  */
 
+// 6 mesas en la franja entre la pista y la barra (pasillo central libre).
 export const TABLES = [
-  [-13, 4], [-5, 5], [3, 4], [11, 5],
-  [-9, 11], [-1, 12], [7, 11], [14, 12],
+  [-12, 3.5], [-4, 4.2], [4, 3.6], [12, 4.0],
+  [-8, 8.6], [8, 8.4],
+];
+
+// 6 livings: tres por lateral del salón, mirando al centro.
+export const LOUNGES = [
+  { x: 19.5, z: -6, face: -1.27 }, { x: 20.2, z: 2, face: -1.67 }, { x: 19.5, z: 9, face: -2.0 },
+  { x: -19.5, z: -6, face: 1.27 }, { x: -20.2, z: 2, face: 1.67 }, { x: -19.5, z: 9, face: 2.0 },
 ];
 
 export const ANCHORS = {
