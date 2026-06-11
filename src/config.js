@@ -129,13 +129,14 @@ export const CONFIG = {
       accent: '#ff2b2b',
       trackUrl: null,
       theme: {
-        bg: '#070104', fog: '#12030a', fogDensity: 0.010,
-        hemiSky: '#52121f', hemiGround: '#08020a', hemiI: 0.55,
-        key: '#ff2b2b', keyI: 900, wash: '#ff3355', washI: 500,
-        practical: '#ff7a45', practicalI: 60,
-        led: ['#ff2b2b', '#5e0716', '#ffd166'],
-        particles: '#ff5a6e', particleOpacity: 0.65,
-        exposure: 1.15, crowdEnergy: 1.0,
+        // Ambiente neutro oscuro; el ROJO vive en key/wash/LED/beams.
+        bg: '#070104', fog: '#0b0407', fogDensity: 0.010,
+        hemiSky: '#3d2a31', hemiGround: '#0c0709', hemiI: 0.75,
+        key: '#ff2330', keyI: 1000, wash: '#e0334e', washI: 420,
+        practical: '#ffac63', practicalI: 85, // contrapunto dorado
+        led: ['#ff2b2b', '#47060e', '#ffe9c4'], // highlight casi blanco
+        particles: '#ff7a5e', particleOpacity: 0.55,
+        tint: '#aaa4ad', exposure: 1.12, crowdEnergy: 1.0,
       },
       music: {
         bpm: 128, swing: 0, root: 33, // A1 — techno oscuro
@@ -154,13 +155,14 @@ export const CONFIG = {
       accent: '#9caf88',
       trackUrl: null,
       theme: {
-        bg: '#d9d2c0', fog: '#e3dccb', fogDensity: 0.007,
-        hemiSky: '#fff4dd', hemiGround: '#8fa080', hemiI: 1.5,
-        key: '#ffe2b0', keyI: 1400, wash: '#f7ecd9', washI: 700,
-        practical: '#ffd9a0', practicalI: 40,
-        led: ['#9caf88', '#f4ead8', '#e0a868'],
-        particles: '#fff3d8', particleOpacity: 0.5,
-        exposure: 1.05, crowdEnergy: 0.55,
+        // Marfil luminoso y limpio; la salvia como acento, no como tinte.
+        bg: '#ece5d4', fog: '#f0e9d8', fogDensity: 0.006,
+        hemiSky: '#fff8ea', hemiGround: '#a8b294', hemiI: 1.75,
+        key: '#ffedc8', keyI: 1500, wash: '#fff3df', washI: 750,
+        practical: '#ffd9a0', practicalI: 50,
+        led: ['#9caf88', '#fffaf0', '#caa45f'], // salvia + marfil + dorado
+        particles: '#fff6e0', particleOpacity: 0.4,
+        tint: '#fff2e2', exposure: 1.08, crowdEnergy: 0.55,
       },
       music: {
         bpm: 118, swing: 0.14, root: 38, // D2 — deep house cálido
@@ -179,13 +181,15 @@ export const CONFIG = {
       accent: '#1f93e0',
       trackUrl: null,
       theme: {
-        bg: '#020609', fog: '#04101c', fogDensity: 0.009,
-        hemiSky: '#0e3a5c', hemiGround: '#020508', hemiI: 0.7,
-        key: '#1f93e0', keyI: 1000, wash: '#2fc4ff', washI: 450,
-        practical: '#9adcff', practicalI: 35,
-        led: ['#1f93e0', '#062742', '#7fdcff'],
-        particles: '#8fd4ff', particleOpacity: 0.45,
-        exposure: 1.08, crowdEnergy: 0.4,
+        // Azul más neutro (nada de cian en el ambiente: mata las pieles)
+        // + practicals cálidos que devuelven el tono de piel.
+        bg: '#020609', fog: '#04080f', fogDensity: 0.008,
+        hemiSky: '#36425c', hemiGround: '#0a0d13', hemiI: 0.9,
+        key: '#3d8fe0', keyI: 1100, wash: '#7fb4ff', washI: 420,
+        practical: '#ffd9a8', practicalI: 55, // contrapunto cálido
+        led: ['#1f93e0', '#06223c', '#eaf6ff'],
+        particles: '#9fd0ff', particleOpacity: 0.4,
+        tint: '#a4b2c6', exposure: 1.1, crowdEnergy: 0.4,
       },
       music: {
         bpm: 96, swing: 0.08, root: 36, // C2 — dub lounge

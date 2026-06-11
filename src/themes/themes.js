@@ -8,12 +8,13 @@ import { CONFIG } from '../config.js';
  * literalmente, encender el mundo.
  */
 export class ThemeEngine {
-  constructor({ scene, renderer, rig, led, extras }) {
+  constructor({ scene, renderer, rig, led, extras, worldMats = [] }) {
     this.scene = scene;
     this.renderer = renderer;
     this.rig = rig;
     this.led = led;
     this.extras = extras;
+    this.worldMats = worldMats; // materiales del salón: se tiñen por modo
 
     const black = () => new THREE.Color('#000000');
     // Estado vivo: arranca apagado.
@@ -24,6 +25,7 @@ export class ThemeEngine {
       practical: black(), practicalI: 0,
       led0: black(), led1: black(), led2: black(),
       particles: black(), particleOpacity: 0,
+      tint: black(),
       exposure: 0.4, crowdEnergy: 0.3,
     };
     this.target = null;
@@ -45,6 +47,7 @@ export class ThemeEngine {
       practical: new THREE.Color(t.practical), practicalI: t.practicalI,
       led0: new THREE.Color(t.led[0]), led1: new THREE.Color(t.led[1]), led2: new THREE.Color(t.led[2]),
       particles: new THREE.Color(t.particles), particleOpacity: t.particleOpacity,
+      tint: new THREE.Color(t.tint ?? '#ffffff'),
       exposure: t.exposure, crowdEnergy: t.crowdEnergy,
     };
     // Acento de UI.
@@ -56,9 +59,11 @@ export class ThemeEngine {
     const k = 1 - Math.exp(-dt * 4.2); // ~0.9 s de crossfade
     const L = this.live, T = this.target;
 
-    for (const key of ['bg', 'fog', 'hemiSky', 'hemiGround', 'key', 'wash', 'practical', 'led0', 'led1', 'led2', 'particles']) {
+    for (const key of ['bg', 'fog', 'hemiSky', 'hemiGround', 'key', 'wash', 'practical', 'led0', 'led1', 'led2', 'particles', 'tint']) {
       L[key].lerp(T[key], k);
     }
+    // Tinte del salón: piso y mobiliario cambian de temperatura por modo.
+    for (const m of this.worldMats) m.color.copy(L.tint);
     for (const key of ['fogDensity', 'hemiI', 'keyI', 'washI', 'practicalI', 'particleOpacity', 'exposure', 'crowdEnergy']) {
       L[key] += (T[key] - L[key]) * k;
     }

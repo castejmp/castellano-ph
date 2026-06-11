@@ -37,7 +37,10 @@ const crowd = new Crowd(scene, isMobile);
 const led = new LedWall(scene);
 const extras = new Extras(scene);
 const rig = new LightRig(scene);
-const themes = new ThemeEngine({ scene, renderer, rig, led, extras });
+const themes = new ThemeEngine({
+  scene, renderer, rig, led, extras,
+  worldMats: [world.statics.material, world.dance.material],
+});
 const audio = new AudioEngine();
 const cameraRig = new CameraRig(camera, isMobile);
 const scroll = new ScrollEngine(CONFIG.stations.length, reduced);
