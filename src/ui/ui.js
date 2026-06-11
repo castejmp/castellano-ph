@@ -90,7 +90,6 @@ export class UI {
     finale.innerHTML = `
       <div>
         <div class="kicker mono">${F.kicker}</div>
-        <p class="map">${F.map}</p>
         <h2><span class="pre">${F.pre}</span>${F.title}</h2>
         <div class="ctas">
           <a class="cta" href="${CONFIG.whatsapp}" target="_blank" rel="noopener">HABLEMOS</a>

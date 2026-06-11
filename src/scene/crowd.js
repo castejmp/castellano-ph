@@ -80,7 +80,7 @@ const FIGURE_FILES = [
     file: 'mesas.glb', path: 'mesas.glb', removes: 'tables',
     place: [
       { fig: 1, height: 1.3, slots: TABLES.map(([x, z], i) => ({ x, z, face: i * 1.3 })) },
-      { fig: 0, height: 0.85, slots: LOUNGES },
+      { fig: 0, height: 1.28, slots: LOUNGES }, // livings +50%
     ],
   },
 ];

@@ -19,7 +19,6 @@ export const CONFIG = {
   // Placa final centrada (estación 8), espejo de la bienvenida.
   finale: {
     kicker: 'FINALMENTE',
-    map: 'Lo que recorriste es un mapa — ya sabés cómo llegar.',
     pre: 'ESTAMOS',
     title: 'LISTOS PARA EMPEZAR',
     verMas: 'VER MÁS',

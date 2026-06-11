@@ -12,11 +12,10 @@ import * as THREE from 'three';
  * retoman, pero no hay botón: el estilo es retro fijo.
  */
 
+// ELEGIDA: la PS1 480 original. Las otras variantes quedan apuntadas
+// por si se retoman, pero el switcheo está desactivado.
 export const RETRO_VARIANTS = [
   { name: 'PS1 480', width: 480, levels: 31, dither: 0.9, sat: 1.0, crt: 0 },
-  { name: 'PS1 320', width: 320, levels: 15, dither: 1.1, sat: 1.0, crt: 0 },
-  { name: 'CRT', width: 560, levels: 31, dither: 0.6, sat: 1.05, crt: 1 },
-  { name: 'MD 9-BIT', width: 320, levels: 7, dither: 1.1, sat: 1.22, crt: 0 },
 ];
 
 export class FXManager {
@@ -39,22 +38,7 @@ export class FXManager {
     this._gradient.needsUpdate = true;
 
     this.style = 'retro';
-    let v = 1;
-    try { v = parseInt(localStorage.getItem('fxRetroVar') || '1', 10); } catch { /* sin storage */ }
-    this.variant = Math.min(RETRO_VARIANTS.length, Math.max(1, v || 1));
-
-    // Teclas 1-4: navegar variantes retro.
-    addEventListener('keydown', (e) => {
-      const n = parseInt(e.key, 10);
-      if (n >= 1 && n <= RETRO_VARIANTS.length) this.setVariant(n);
-    });
-  }
-
-  setVariant(n) {
-    this.variant = n;
-    try { localStorage.setItem('fxRetroVar', String(n)); } catch { /* sin storage */ }
-    this.apply(this.style);
-    this._toast(`RETRO ${n} · ${RETRO_VARIANTS[n - 1].name}`);
+    this.variant = 1; // PS1 480, fija
   }
 
   apply(style) {
@@ -90,19 +74,6 @@ export class FXManager {
   /** Re-aplica el estilo (p. ej. cuando los GLB cargan tarde). */
   refresh() {
     this.apply(this.style);
-  }
-
-  _toast(text) {
-    let t = document.querySelector('.fx-toast');
-    if (!t) {
-      t = document.createElement('div');
-      t.className = 'fx-toast mono';
-      document.body.appendChild(t);
-    }
-    t.textContent = text;
-    t.classList.remove('show');
-    void t.offsetWidth;
-    t.classList.add('show');
   }
 
   _toonify() {
