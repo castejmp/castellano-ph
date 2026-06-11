@@ -107,8 +107,8 @@ export const CONFIG = {
   shots: [
     { pos: [45, 36, 45], look: [0, 0, 0], fov: 30 },                // 0 PLANO GENERAL (iso)
     // Players a media distancia: de cerca la compresión de malla se nota.
-    // 1 DISEÑO: cámara baja encuadrando al diseñador Y la mesa
-    { pos: [-11.9, 4.8, 23.6], look: [-14.5, 1.15, 18.9], fov: 30 },
+    // 1 DISEÑO: cámara baja apuntando abajo — se ve la laptop bajo el brazo
+    { pos: [-11.9, 4.8, 23.6], look: [-14.5, 0.7, 19.05], fov: 30 },
     { pos: [2.8, 2.4, -8.2], look: [7.5, 1.4, -1.6], fov: 30 },     // 2 FOTOGRAFÍA: de FRENTE a los fotógrafos, desde la pista
     { pos: [-14.6, 2.7, -1.7], look: [-10.4, 1.3, -6.3], fov: 32 }, // 3 VIDEO: borde oeste, pista y LED detrás
     { pos: [4.9, 3.3, -8.8], look: [4.6, 1.8, -18.5], fov: 32 },    // 4 VISUALES: el VJ y la pantalla encima
@@ -132,7 +132,8 @@ export const CONFIG = {
       theme: {
         // Ambiente neutro oscuro; el ROJO vive en key/wash/LED/beams.
         bg: '#070104', fog: '#0b0407', fogDensity: 0.010,
-        hemiSky: '#3d2a31', hemiGround: '#0c0709', hemiI: 0.75,
+        // Ambiente ~30: el entorno se lee sin perder el dramatismo.
+        hemiSky: '#4a3a40', hemiGround: '#141014', hemiI: 1.35,
         key: '#ff2330', keyI: 1000, wash: '#e0334e', washI: 420,
         practical: '#ffac63', practicalI: 85, // contrapunto dorado
         led: ['#ff2b2b', '#47060e', '#ffe9c4'], // highlight casi blanco
@@ -156,10 +157,11 @@ export const CONFIG = {
       accent: '#e0a84f',
       trackUrl: null,
       theme: {
-        // Marfil luminoso con acentos ORO/ÁMBAR (chau verde oliva).
-        bg: '#ece5d4', fog: '#f0e9d8', fogDensity: 0.006,
-        hemiSky: '#fff8ea', hemiGround: '#b09a72', hemiI: 1.75,
-        key: '#ffe3ae', keyI: 1500, wash: '#ffedce', washI: 750,
+        // Marfil con acentos ORO/ÁMBAR. Ambiente ~50-60 (antes 100):
+        // atardecer dorado, no mediodía.
+        bg: '#d6cdb8', fog: '#dcd3be', fogDensity: 0.006,
+        hemiSky: '#f2e8d2', hemiGround: '#8f7c5c', hemiI: 1.15,
+        key: '#ffe3ae', keyI: 1350, wash: '#ffedce', washI: 620,
         practical: '#ffc06a', practicalI: 60,
         // [principal, BASE OSCURA, highlight] — oro, ámbar profundo, marfil.
         led: ['#e8b558', '#4a3414', '#fff3da'],
@@ -184,9 +186,9 @@ export const CONFIG = {
       trackUrl: null,
       theme: {
         // Azul más neutro (nada de cian en el ambiente: mata las pieles)
-        // + practicals cálidos que devuelven el tono de piel.
+        // + practicals cálidos. Ambiente ~30, como quince.
         bg: '#020609', fog: '#04080f', fogDensity: 0.008,
-        hemiSky: '#36425c', hemiGround: '#0a0d13', hemiI: 0.9,
+        hemiSky: '#43506b', hemiGround: '#10141c', hemiI: 1.5,
         key: '#3d8fe0', keyI: 1100, wash: '#7fb4ff', washI: 420,
         practical: '#ffd9a8', practicalI: 72, // contrapunto cálido (pieles)
         led: ['#1f93e0', '#06223c', '#eaf6ff'],
