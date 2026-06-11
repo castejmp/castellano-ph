@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { ANCHORS } from './world.js';
+import { loadBrandGlyph } from './brand.js';
 
 /**
  * LA PANTALLA LED — contenido generativo audio-reactivo (pulse.show).
@@ -145,6 +146,16 @@ function buildIconAtlas() {
 
   const tex = new THREE.CanvasTexture(cnv);
   tex.colorSpace = THREE.SRGBColorSpace;
+  // CALCO: si está el isotipo real, redibuja la celda 0 del atlas.
+  loadBrandGlyph(`${import.meta.env.BASE_URL}brand/io.png`).then((b) => {
+    if (!b) return;
+    c.clearRect(0, 0, 256, 256);
+    const s = Math.min(200 / b.image.width, 200 / b.image.height);
+    const w = b.image.width * s, h = b.image.height * s;
+    c.shadowBlur = 0;
+    c.drawImage(b.image, (256 - w) / 2, (256 - h) / 2, w, h);
+    tex.needsUpdate = true;
+  });
   return tex;
 }
 

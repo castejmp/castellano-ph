@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { ANCHORS } from './world.js';
 import { STATION_SPOTS } from './crowd.js';
+import { loadBrandGlyph } from './brand.js';
 
 /**
  * LOS MOMENTOS — todo lo que se mueve o emite luz propia:
@@ -117,14 +118,27 @@ export class Extras {
       map: neonTexture('castellano'), transparent: true, depthWrite: false,
     });
     const neonGeo = new THREE.PlaneGeometry(...neon.size);
-    for (const spot of neon.spots) {
+    this.neonMeshes = neon.spots.map((spot) => {
       const m = new THREE.Mesh(neonGeo, this.neonMat);
       m.position.set(...spot.pos);
       m.rotation.set(-Math.PI / 2, 0, spot.rz); // al piso, legible desde afuera
       m.matrixAutoUpdate = false;
       m.updateMatrix();
       scene.add(m);
-    }
+      return m;
+    });
+    // CALCO: si está el logo real (public/brand/wordmark.png), lo usa
+    // tal cual, ajustando la proporción del cartel a la imagen.
+    loadBrandGlyph(`${import.meta.env.BASE_URL}brand/wordmark.png`).then((b) => {
+      if (!b) return;
+      this.neonMat.map = b.texture;
+      this.neonMat.needsUpdate = true;
+      const sy = (neon.size[0] * b.aspect) / neon.size[1];
+      for (const m of this.neonMeshes) {
+        m.scale.set(1, sy, 1);
+        m.updateMatrix();
+      }
+    });
     // El isotipo |o| en el centro de la pista, brillando hacia arriba.
     this.ioMat = new THREE.MeshBasicMaterial({
       map: ioTexture(), transparent: true, depthWrite: false,
@@ -135,6 +149,14 @@ export class Extras {
     io.matrixAutoUpdate = false;
     io.updateMatrix();
     scene.add(io);
+    // CALCO del isotipo real si está public/brand/io.png.
+    loadBrandGlyph(`${import.meta.env.BASE_URL}brand/io.png`).then((b) => {
+      if (!b) return;
+      this.ioMat.map = b.texture;
+      this.ioMat.needsUpdate = true;
+      io.scale.set(1, b.aspect / 1, 1); // el plano es cuadrado
+      io.updateMatrix();
+    });
 
     /* ── Parrilla: beams de cabezales móviles ── */
     this.beamMat = new THREE.MeshBasicMaterial({
