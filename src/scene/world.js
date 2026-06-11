@@ -177,23 +177,23 @@ export function buildWorld(scene) {
   cyl(0.55, 0.62, 0.42, 8, '#3c3630', 18.6, 0.21, 14.9);
   target = parts;
 
-  /* ── Mesa de DISEÑO junto a la barra (fuera de la fiesta) ── */
-  box(2.2, 0.1, 1.2, '#4a4038', -8.5, 0.93, 18.2);
+  /* ── Mesa de DISEÑO al rincón suroeste (lejos de la barra) ── */
+  box(2.2, 0.1, 1.2, '#4a4038', -14.5, 0.93, 18.2);
   for (const [lx, lz] of [[-0.95, -0.45], [0.95, -0.45], [-0.95, 0.45], [0.95, 0.45]]) {
-    cyl(0.045, 0.055, 0.9, 6, '#2e2822', -8.5 + lx, 0.45, 18.2 + lz);
+    cyl(0.045, 0.055, 0.9, 6, '#2e2822', -14.5 + lx, 0.45, 18.2 + lz);
   }
   const paperRots = [0.2, -0.4, 0.7, -0.15];
   for (let i = 0; i < 4; i++) {
     // Papel apagado: que no queme bajo la lámpara.
-    box(0.4, 0.012, 0.54, i % 2 ? '#b9b3a4' : '#a8a294', -9.05 + (i % 2) * 0.7, 0.99, 17.95 + Math.floor(i / 2) * 0.55, paperRots[i]);
+    box(0.4, 0.012, 0.54, i % 2 ? '#b9b3a4' : '#a8a294', -15.05 + (i % 2) * 0.7, 0.99, 17.95 + Math.floor(i / 2) * 0.55, paperRots[i]);
   }
   // Chips de la brand bar sobre la mesa.
   const brand = ['#f63f2f', '#fe720c', '#feca0d', '#7fc527', '#1f93e0'];
-  brand.forEach((c, i) => box(0.16, 0.014, 0.16, c, -9.0 + i * 0.22, 1.0, 18.62, 0.12));
+  brand.forEach((c, i) => box(0.16, 0.014, 0.16, c, -15.0 + i * 0.22, 1.0, 18.62, 0.12));
   // Laptop.
-  box(0.5, 0.04, 0.36, '#26262e', -7.85, 1.0, 18.05, -0.4);
+  box(0.5, 0.04, 0.36, '#26262e', -13.85, 1.0, 18.05, -0.4);
   const lap = new THREE.BoxGeometry(0.5, 0.36, 0.03);
-  lap.rotateX(-0.35); lap.rotateY(-0.4); lap.translate(-8.0, 1.18, 17.92);
+  lap.rotateX(-0.35); lap.rotateY(-0.4); lap.translate(-14.0, 1.18, 17.92);
   push(lap, '#1b1b22');
   // El escritorio de EDICIÓN ya no existe acá: el modelo del editor
   // trae su propia mesa y PC.

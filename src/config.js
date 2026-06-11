@@ -99,11 +99,11 @@ export const CONFIG = {
   shots: [
     { pos: [45, 36, 45], look: [0, 0, 0], fov: 30 },                // 0 PLANO GENERAL (iso)
     // Players a media distancia: de cerca la compresión de malla se nota.
-    { pos: [-4.4, 3.0, 26.7], look: [-8.6, 1.2, 18.9], fov: 30 },   // 1 DISEÑO: junto a la barra, la fiesta de fondo
+    { pos: [-10.3, 3.0, 26.8], look: [-14.5, 1.2, 19.0], fov: 30 }, // 1 DISEÑO: rincón suroeste, la fiesta de fondo
     { pos: [2.8, 2.4, -8.2], look: [7.5, 1.4, -1.6], fov: 30 },     // 2 FOTOGRAFÍA: de FRENTE a los fotógrafos, desde la pista
     { pos: [-14.6, 2.7, -1.7], look: [-10.4, 1.3, -6.3], fov: 32 }, // 3 VIDEO: borde oeste, pista y LED detrás
     { pos: [4.9, 3.3, -8.8], look: [4.6, 1.8, -18.5], fov: 32 },    // 4 VISUALES: el VJ y la pantalla encima
-    { pos: [11.4, 3.0, 27.6], look: [8.6, 1.2, 20.2], fov: 30 },    // 5 EDICIÓN: los dos editores contra la pared sur
+    { pos: [17.3, 3.0, 27.6], look: [14.5, 1.2, 20.2], fov: 30 },   // 5 EDICIÓN: rincón sureste, contra la pared
     { pos: [17, 14.5, 15], look: [0, 9, -4], fov: 55 },             // 6 DRONE → POV del drone (path.js)
     { pos: [12, 4.5, 7], look: [-3, 4, -16], fov: 50 },             // 7 INMERSIVO
     { pos: [-45, 36, 45], look: [0, 1, 0], fov: 30 },               // 8 FINALMENTE (iso opuesto)

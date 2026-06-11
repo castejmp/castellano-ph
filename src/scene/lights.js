@@ -34,11 +34,11 @@ export class LightRig {
     scene.add(this.practical);
 
     this.deskLamp = new THREE.PointLight('#ffd9a8', 5, 9, 1.6);
-    this.deskLamp.position.set(-8.5, 2.8, 18.6);
+    this.deskLamp.position.set(-14.5, 2.8, 18.6);
     scene.add(this.deskLamp);
 
     this.editLamp = new THREE.PointLight('#cfe6ff', 7, 9, 1.6);
-    this.editLamp.position.set(8.6, 2.7, 18.6);
+    this.editLamp.position.set(14.5, 2.7, 19.8);
     scene.add(this.editLamp);
 
     // (El set de fotografía salió de escena: su lámpara también.)

@@ -87,12 +87,13 @@ function buildIconAtlas() {
     c.fillText(s, 128, y);
   };
 
-  // 0 · |o| — la marca.
+  // 0 · |o| — la marca (proporciones del logo original: barras y aro
+  // de la misma altura, trazo grueso parejo).
   inCell(0, () => {
-    c.fillRect(52, 76, 24, 104);
-    c.fillRect(180, 76, 24, 104);
-    c.lineWidth = 24;
-    c.beginPath(); c.arc(128, 128, 44, 0, Math.PI * 2); c.stroke();
+    c.fillRect(46, 70, 26, 116);
+    c.fillRect(184, 70, 26, 116);
+    c.lineWidth = 26;
+    c.beginPath(); c.arc(128, 128, 45, 0, Math.PI * 2); c.stroke();
   });
   // 1 · Ai — diseño.
   inCell(1, () => {
@@ -188,6 +189,10 @@ export class LedWall {
         R, R, size[1], 24, 1, true,
         sign > 0 ? Math.PI / 2 : Math.PI, Math.PI / 2
       );
+      // El público ve la cara INTERNA del cilindro: sin esto, iconos y
+      // contenido se leen espejados.
+      const uv = arc.attributes.uv;
+      for (let i = 0; i < uv.count; i++) uv.setX(i, 1 - uv.getX(i));
       const corner = new THREE.Mesh(arc, mat);
       corner.position.set(sign * 15.77, pos[1], -9.47);
       corner.matrixAutoUpdate = false;

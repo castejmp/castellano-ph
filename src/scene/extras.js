@@ -71,18 +71,37 @@ function screenTexture(kind) {
   return tex;
 }
 
-/** Texto blanco sobre canvas transparente → textura para el neón. */
+/** Wordmark blanco sobre canvas transparente → textura para el neón.
+ *  Tipografía geométrica bold en minúsculas, como el logo original. */
 function neonTexture(text) {
   const cnv = document.createElement('canvas');
   cnv.width = 1024; cnv.height = 224;
   const c = cnv.getContext('2d');
-  c.font = '900 150px system-ui, -apple-system, Arial, sans-serif';
+  c.font = '700 152px Futura, "Century Gothic", "Avenir Next", "Trebuchet MS", Arial, sans-serif';
   c.textAlign = 'center';
   c.textBaseline = 'middle';
   c.shadowColor = 'rgba(255,255,255,0.9)';
-  c.shadowBlur = 26;
+  c.shadowBlur = 22;
   c.fillStyle = '#ffffff';
   c.fillText(text, 512, 118);
+  const tex = new THREE.CanvasTexture(cnv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+/** El isotipo |o| con las proporciones del logo original. */
+function ioTexture() {
+  const cnv = document.createElement('canvas');
+  cnv.width = 256; cnv.height = 256;
+  const c = cnv.getContext('2d');
+  c.fillStyle = '#ffffff';
+  c.strokeStyle = '#ffffff';
+  c.shadowColor = 'rgba(255,255,255,0.9)';
+  c.shadowBlur = 14;
+  c.fillRect(46, 70, 26, 116);
+  c.fillRect(184, 70, 26, 116);
+  c.lineWidth = 26;
+  c.beginPath(); c.arc(128, 128, 45, 0, Math.PI * 2); c.stroke();
   const tex = new THREE.CanvasTexture(cnv);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
@@ -106,6 +125,16 @@ export class Extras {
       m.updateMatrix();
       scene.add(m);
     }
+    // El isotipo |o| en el centro de la pista, brillando hacia arriba.
+    this.ioMat = new THREE.MeshBasicMaterial({
+      map: ioTexture(), transparent: true, depthWrite: false,
+    });
+    const io = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.4), this.ioMat);
+    io.position.set(0, 0.125, -9);
+    io.rotation.x = -Math.PI / 2;
+    io.matrixAutoUpdate = false;
+    io.updateMatrix();
+    scene.add(io);
 
     /* ── Parrilla: beams de cabezales móviles ── */
     this.beamMat = new THREE.MeshBasicMaterial({
@@ -225,7 +254,7 @@ export class Extras {
     lit(0.44, 0.3, designTex, (g) => {
       g.rotateX(-0.35);
       g.rotateY(-0.4);
-      g.translate(-8.0, 1.187, 17.942);
+      g.translate(-14.0, 1.187, 17.942);
     });
 
     /* ── Superficies de mapping (INMERSIVO) ── */
@@ -339,8 +368,9 @@ export class Extras {
     this.spotConeMat.opacity = 0.025 * w;
     this.spotCone.visible = w > 0.02;
 
-    // Neón: respira apenas con los medios.
+    // La marca en el piso respira apenas con los medios.
     this.neonMat.opacity = 0.82 + bands.mid * 0.18;
+    this.ioMat.opacity = 0.82 + bands.mid * 0.18;
 
     // Mapping.
     const mu = this.mapUniforms;
