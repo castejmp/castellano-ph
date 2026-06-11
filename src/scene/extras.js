@@ -371,7 +371,11 @@ export class Extras {
     }
 
     // Beams de cabezales: barren la pista a distintas velocidades.
-    this.beamMat.opacity = 0.05 + bands.bass * 0.13 + immersiveW * 0.06;
+    // Cuando el DoF de "jugador seleccionado" aprieta, se atenúan: los
+    // volumétricos no escriben profundidad y el bokeh los corta feo.
+    const st0 = Math.round(stationFloat);
+    const dofW = st0 >= 1 && st0 <= 6 ? Math.max(0, 1 - Math.abs(stationFloat - st0) * 2.2) : 0;
+    this.beamMat.opacity = (0.05 + bands.bass * 0.13 + immersiveW * 0.06) * (1 - 0.6 * dofW);
     for (const g of this.beams) {
       const i = g.userData.i;
       g.rotation.z = Math.sin(t * (0.55 + i * 0.13) + i * 1.7) * 0.55;

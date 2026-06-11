@@ -12,6 +12,7 @@ import { ThemeEngine } from './themes/themes.js';
 import { AudioEngine } from './audio/audio.js';
 import { UI } from './ui/ui.js';
 import { DebugHud } from './ui/debug.js';
+import { FXManager } from './fx/fx.js';
 
 /* ── Contexto ───────────────────────────────────── */
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -42,12 +43,17 @@ const cameraRig = new CameraRig(camera);
 const scroll = new ScrollEngine(CONFIG.stations.length, reduced);
 const debug = new DebugHud();
 
+/* ── FX: los 4 conceptos de estética, conmutables ── */
+const fx = new FXManager({ renderer, scene, isMobile });
+
 /* ── Postproceso: solo desktop, con kill-switch ── */
 let post = null;
 if (!isMobile) {
   import('./post/post.js').then(({ Post }) => {
     post = new Post(renderer, scene, camera);
     post.setSize(innerWidth, innerHeight);
+    fx.post = post;
+    fx.refresh();
   });
 }
 
@@ -81,7 +87,13 @@ const ui = new UI({
     audio.setMuted(muted);
     return muted;
   },
+  onFXCycle() {
+    return fx.cycle();
+  },
 });
+// Estilo persistido + label inicial del botón.
+fx.apply(fx.style);
+ui.fxBtn.textContent = `FX·${fx.style.toUpperCase()}`;
 
 // Preloader: carga REAL de los modelos de la gente (GLB). Si la red
 // falla o tarda demasiado, el público procedural queda como fallback
@@ -97,6 +109,7 @@ crowd
   .finally(() => {
     clearTimeout(glbTimeout);
     ui.gateProgress(1);
+    fx.refresh(); // re-aplica el estilo a los meshes GLB recién llegados
   });
 
 /* ── Calidad adaptativa (kill-switch) ───────────── */
@@ -173,7 +186,7 @@ function frame() {
   // fondo se desenfoca a la par del spotlight.
   const stR = Math.round(f);
   const dofBoost = stR >= 1 && stR <= 6 ? Math.max(0, 1 - Math.abs(f - stR) * 2.2) : 0;
-  if (post) post.render(cameraRig.focusDistance, camera.fov, dofBoost);
+  if (post) post.render(cameraRig.focusDistance, camera.fov, dofBoost, t);
   else renderer.render(scene, camera);
 
   debug.update({
