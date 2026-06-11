@@ -152,17 +152,17 @@ export const CONFIG = {
     },
     boda: {
       label: 'BODA',
-      accent: '#9caf88',
+      accent: '#e0a84f',
       trackUrl: null,
       theme: {
-        // Marfil luminoso y limpio; la salvia como acento, no como tinte.
+        // Marfil luminoso con acentos ORO/ÁMBAR (chau verde oliva).
         bg: '#ece5d4', fog: '#f0e9d8', fogDensity: 0.006,
-        hemiSky: '#fff8ea', hemiGround: '#a8b294', hemiI: 1.75,
-        key: '#ffedc8', keyI: 1500, wash: '#fff3df', washI: 750,
-        practical: '#ffd9a0', practicalI: 50,
-        // [principal, BASE OSCURA, highlight] — la base clara quemaba la pantalla.
-        led: ['#a9bd90', '#37422e', '#fff3da'],
-        particles: '#fff6e0', particleOpacity: 0.4,
+        hemiSky: '#fff8ea', hemiGround: '#b09a72', hemiI: 1.75,
+        key: '#ffe3ae', keyI: 1500, wash: '#ffedce', washI: 750,
+        practical: '#ffc06a', practicalI: 60,
+        // [principal, BASE OSCURA, highlight] — oro, ámbar profundo, marfil.
+        led: ['#e8b558', '#4a3414', '#fff3da'],
+        particles: '#ffe9b8', particleOpacity: 0.4,
         tint: '#fff2e2', exposure: 1.08, crowdEnergy: 0.55,
       },
       music: {

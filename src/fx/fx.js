@@ -53,7 +53,7 @@ export class FXManager {
     // ancho objetivo sube ~55%: con 480 fijos el píxel quedaba gigante
     // en monitores grandes (en el celu 480 ya es casi nativo).
     const cfg = RETRO_VARIANTS[this.variant - 1];
-    const targetW = this.isMobile ? cfg.width : Math.round(cfg.width * 1.55);
+    const targetW = this.isMobile ? cfg.width : Math.round(cfg.width * 2.2);
     const pr = style === 'retro'
       ? Math.min(0.6, Math.max(0.12, targetW / innerWidth))
       : this._basePR;
@@ -64,9 +64,10 @@ export class FXManager {
     // pixelación (lamparitas × render lowres) hacía moiré feo.
     if (this.led) {
       this.led.uniforms.uMask.value = style === 'retro' ? 0 : 1;
+      // Píxel de pantalla a 1/4 del anterior (44×18 → 176×72).
       this.led.uniforms.uGrid.value.set(
-        style === 'retro' ? 44 : 110,
-        style === 'retro' ? 18 : 44
+        style === 'retro' ? 176 : 110,
+        style === 'retro' ? 72 : 44
       );
     }
 
