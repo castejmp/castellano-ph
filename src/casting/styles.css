@@ -94,6 +94,19 @@ body {
 .add-foot { display: flex; align-items: center; gap: 1rem; margin-top: 1rem; }
 .tip { color: var(--muted); font-size: 0.76rem; }
 
+/* Filtros */
+.filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem; margin-bottom: 1.1rem; }
+.filters .f-search { flex: 1; min-width: 200px; background: var(--panel); color: var(--txt); border: 1px solid var(--line); border-radius: 999px; padding: 0.6rem 1rem; font: inherit; font-size: 0.9rem; }
+.filters .f-search:focus { outline: none; border-color: var(--accent); }
+.filters label { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+.filters select, .filters input[type=number] { background: var(--panel); color: var(--txt); border: 1px solid var(--line); border-radius: 8px; padding: 0.45rem 0.6rem; font: inherit; font-size: 0.85rem; }
+.filters select:focus, .filters input[type=number]:focus { outline: none; border-color: var(--accent); }
+.filters input[type=number] { width: 62px; }
+.filters .f-age span { color: var(--muted); }
+.filters .f-clear { padding: 0.5rem 0.9rem; font-size: 0.76rem; }
+.list-empty { color: var(--muted); text-align: center; padding: 2.4rem; font-size: 0.9rem; }
+@media (max-width: 720px) { .filters .f-search { min-width: 100%; } }
+
 /* Cards */
 .list { display: flex; flex-direction: column; gap: 0.9rem; }
 .card { display: grid; grid-template-columns: 300px 1fr; gap: 1rem; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 1rem; transition: border-color 0.2s; }

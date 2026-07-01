@@ -9,8 +9,32 @@ let models = [];
 let trash = [];
 let draft = { photos: [] };
 let cloud = null; // módulo de nube (lazy) cuando hay sesión
+const filters = { q: '', sort: 'manual', emin: '', emax: '' };
 
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()));
+
+/* Vista = modelos filtrados + ordenados (no altera el orden guardado). */
+const ageOf = (m) => { const n = parseInt(String(m.edad).match(/\d+/)?.[0], 10); return Number.isFinite(n) ? n : NaN; };
+const surnameOf = (m) => { const w = String(m.nombre || '').trim().split(/\s+/); return w.length > 1 ? w[w.length - 1] : (w[0] || ''); };
+const cmp = (a, b) => String(a).localeCompare(String(b), 'es', { sensitivity: 'base' });
+const isManual = () => filters.sort === 'manual' && !filters.q && !filters.emin && !filters.emax;
+
+function currentView() {
+  const q = filters.q.trim().toLowerCase();
+  let v = models.filter((m) => {
+    if (q && !`${m.nombre || ''} ${m.instagram || ''} ${m.telefono || ''}`.toLowerCase().includes(q)) return false;
+    const a = ageOf(m);
+    if (filters.emin && (!Number.isFinite(a) || a < +filters.emin)) return false;
+    if (filters.emax && (!Number.isFinite(a) || a > +filters.emax)) return false;
+    return true;
+  });
+  const s = filters.sort;
+  if (s === 'nombre') v.sort((a, b) => cmp(a.nombre || '~', b.nombre || '~'));
+  else if (s === 'apellido') v.sort((a, b) => cmp(surnameOf(a) || '~', surnameOf(b) || '~'));
+  else if (s === 'edad-asc') v.sort((a, b) => (ageOf(a) || 999) - (ageOf(b) || 999));
+  else if (s === 'edad-desc') v.sort((a, b) => (ageOf(b) || -1) - (ageOf(a) || -1));
+  return v;
+}
 
 const FIELDS = [
   { key: 'instagram', label: 'Instagram', ph: '@usuario' },
@@ -149,6 +173,25 @@ https://www.instagram.com/usuario/
     </div>
   </section>
 
+  <section class="filters">
+    <input class="f-search" data-q placeholder="Buscar por nombre, IG o teléfono…" />
+    <label class="f-sort">Ordenar
+      <select data-sort>
+        <option value="manual">Manual</option>
+        <option value="nombre">Nombre A→Z</option>
+        <option value="apellido">Apellido A→Z</option>
+        <option value="edad-asc">Edad ↑</option>
+        <option value="edad-desc">Edad ↓</option>
+      </select>
+    </label>
+    <label class="f-age">Edad
+      <input type="number" data-emin placeholder="mín" min="0" max="120" />
+      <span>–</span>
+      <input type="number" data-emax placeholder="máx" min="0" max="120" />
+    </label>
+    <button class="btn ghost f-clear" data-clearf hidden>Limpiar filtros</button>
+  </section>
+
   <section class="list" data-list></section>
 `;
 
@@ -194,16 +237,42 @@ app.querySelector('[data-addbtn]').addEventListener('click', () => {
   persistAll();
 });
 
-/* ── Lista de fichas ────────────────────────────── */
-function renderList() {
-  countEl.textContent = `${models.length} ${models.length === 1 ? 'modelo' : 'modelos'}`;
-  listEl.innerHTML = models.map((m, i) => cardHTML(m, i)).join('');
-  models.forEach((m, i) => wireCard(listEl.children[i], m, i));
-  const tn = app.querySelector('[data-trashn]');
-  if (tn) tn.textContent = trash.length;
+/* ── Filtros / orden ────────────────────────────── */
+{
+  const qEl = app.querySelector('[data-q]');
+  const sortEl = app.querySelector('[data-sort]');
+  const eminEl = app.querySelector('[data-emin]');
+  const emaxEl = app.querySelector('[data-emax]');
+  qEl.addEventListener('input', () => { filters.q = qEl.value; renderList(); });
+  sortEl.addEventListener('change', () => { filters.sort = sortEl.value; renderList(); });
+  eminEl.addEventListener('input', () => { filters.emin = eminEl.value; renderList(); });
+  emaxEl.addEventListener('input', () => { filters.emax = emaxEl.value; renderList(); });
+  app.querySelector('[data-clearf]').addEventListener('click', () => {
+    filters.q = ''; filters.sort = 'manual'; filters.emin = ''; filters.emax = '';
+    qEl.value = ''; sortEl.value = 'manual'; eminEl.value = ''; emaxEl.value = '';
+    renderList();
+  });
 }
 
-function cardHTML(m, i) {
+/* ── Lista de fichas ────────────────────────────── */
+function renderList() {
+  const v = currentView();
+  const filtered = v.length !== models.length || !isManual();
+  countEl.textContent = filtered
+    ? `${v.length} de ${models.length}`
+    : `${models.length} ${models.length === 1 ? 'modelo' : 'modelos'}`;
+  const manual = isManual();
+  listEl.innerHTML = v.length
+    ? v.map((m, i) => cardHTML(m, i, manual)).join('')
+    : `<p class="list-empty">${models.length ? 'Ningún modelo coincide con el filtro.' : 'Todavía no cargaste modelos.'}</p>`;
+  v.forEach((m, i) => { if (listEl.children[i]) wireCard(listEl.children[i], m); });
+  const tn = app.querySelector('[data-trashn]');
+  if (tn) tn.textContent = trash.length;
+  const cf = app.querySelector('[data-clearf]');
+  if (cf) cf.hidden = isManual();
+}
+
+function cardHTML(m, i, manual) {
   const missing = FIELDS.filter((f) => !String(m[f.key] || '').trim()).length;
   return `
     <article class="card" data-i="${i}">
@@ -216,8 +285,7 @@ function cardHTML(m, i) {
           <span class="idx">${String(i + 1).padStart(2, '0')}</span>
           ${missing ? `<span class="warn">${missing} sin dato</span>` : `<span class="ok">completo</span>`}
           <div class="card-tools">
-            <button data-up title="Subir">▲</button>
-            <button data-down title="Bajar">▼</button>
+            ${manual ? '<button data-up title="Subir">▲</button><button data-down title="Bajar">▼</button>' : ''}
             <button data-remove title="Eliminar">🗑</button>
           </div>
         </div>
@@ -230,7 +298,7 @@ function cardHTML(m, i) {
     </article>`;
 }
 
-function wireCard(el, m, i) {
+function wireCard(el, m) {
   let t;
   el.querySelectorAll('input[data-key]').forEach((inp) =>
     inp.addEventListener('input', () => {
@@ -239,15 +307,23 @@ function wireCard(el, m, i) {
     }));
   el.querySelector('[data-remove]').addEventListener('click', () => {
     // Soft-delete: va a la papelera (se puede restaurar).
-    models.splice(i, 1);
+    const ci = models.indexOf(m);
+    if (ci >= 0) models.splice(ci, 1);
     m.trashed = true;
     trash.unshift(m);
     renderList();
     saveOne(m);      // marca trashed=true en local y nube
     persistAll();    // reindexa el orden de los que quedan
   });
-  el.querySelector('[data-up]').addEventListener('click', () => { if (i > 0) { [models[i - 1], models[i]] = [models[i], models[i - 1]]; renderList(); persistAll(); } });
-  el.querySelector('[data-down]').addEventListener('click', () => { if (i < models.length - 1) { [models[i + 1], models[i]] = [models[i], models[i + 1]]; renderList(); persistAll(); } });
+  // Reordenar solo existe en orden manual (los botones no se muestran si hay filtro).
+  el.querySelector('[data-up]')?.addEventListener('click', () => {
+    const i = models.indexOf(m);
+    if (i > 0) { [models[i - 1], models[i]] = [models[i], models[i - 1]]; renderList(); persistAll(); }
+  });
+  el.querySelector('[data-down]')?.addEventListener('click', () => {
+    const i = models.indexOf(m);
+    if (i >= 0 && i < models.length - 1) { [models[i + 1], models[i]] = [models[i], models[i + 1]]; renderList(); persistAll(); }
+  });
 
   const photosEl = el.querySelector('[data-photos]');
   el.querySelector('[data-addphoto]').addEventListener('click', () => pickPhotos(m));
@@ -289,20 +365,22 @@ function stamp() {
   const d = new Date();
   return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
 }
+// Los exports respetan la vista: filtrás/ordenás y bajás lo que ves.
 async function withBusy(btn, fn) {
-  if (!models.length) { alert('Agregá al menos un modelo.'); return; }
+  const v = currentView();
+  if (!v.length) { alert('No hay modelos para exportar con el filtro actual.'); return; }
   const txt = btn.textContent; btn.textContent = 'Generando…'; btn.disabled = true;
-  try { await fn(); } catch (e) { console.error(e); alert('Error al exportar: ' + e.message); }
+  try { await fn(v); } catch (e) { console.error(e); alert('Error al exportar: ' + e.message); }
   btn.textContent = txt; btn.disabled = false;
 }
 app.querySelector('[data-psd]').addEventListener('click', (e) =>
-  withBusy(e.target, async () => download(await exportPSD(models), `casting-${stamp()}.psd`)));
+  withBusy(e.target, async (v) => download(await exportPSD(v), `casting-${stamp()}.psd`)));
 app.querySelector('[data-png]').addEventListener('click', (e) =>
-  withBusy(e.target, async () => download(await exportPNG(models), `casting-${stamp()}.png`)));
+  withBusy(e.target, async (v) => download(await exportPNG(v), `casting-${stamp()}.png`)));
 app.querySelector('[data-pdf]').addEventListener('click', (e) =>
-  withBusy(e.target, async () => download(await exportPDF(models), `casting-${stamp()}.pdf`)));
+  withBusy(e.target, async (v) => download(await exportPDF(v), `casting-${stamp()}.pdf`)));
 app.querySelector('[data-csv]').addEventListener('click', (e) =>
-  withBusy(e.target, async () => download(exportCSV(models), `casting-${stamp()}.csv`)));
+  withBusy(e.target, async (v) => download(exportCSV(v), `casting-${stamp()}.csv`)));
 /* ── Papelera ───────────────────────────────────── */
 function restoreOne(m) {
   const i = trash.indexOf(m);
