@@ -57,13 +57,18 @@ async function removePhotos(paths) {
 export async function pushModel(model) {
   await uploadPhotos(model);
   const row = {
-    id: model.id, ord: model.ord ?? 0,
+    id: model.id, ord: model.ord ?? 0, trashed: !!model.trashed,
     instagram: model.instagram || '', nombre: model.nombre || '', telefono: model.telefono || '',
     altura: model.altura || '', edad: model.edad || '',
     fotos: model.photos.filter((p) => p.path).map((p) => ({ path: p.path, name: p.name })),
     updated_at: new Date().toISOString(),
   };
-  const { error } = await client().from('models').upsert(row);
+  let { error } = await client().from('models').upsert(row);
+  // Si todavía no corriste el ALTER de la columna 'trashed', guardamos igual.
+  if (error && /trashed|column/i.test(error.message)) {
+    delete row.trashed;
+    ({ error } = await client().from('models').upsert(row));
+  }
   if (error) throw error;
 }
 export async function deleteModelCloud(id, paths = []) {

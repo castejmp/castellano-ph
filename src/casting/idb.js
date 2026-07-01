@@ -34,7 +34,7 @@ async function tx(mode, fn) {
 /** Guarda/actualiza una ficha. Serializa solo lo persistible (blobs). */
 export function saveModel(m) {
   const rec = {
-    id: m.id, ord: m.ord ?? 0,
+    id: m.id, ord: m.ord ?? 0, trashed: !!m.trashed,
     instagram: m.instagram || '', nombre: m.nombre || '', telefono: m.telefono || '',
     altura: m.altura || '', edad: m.edad || '',
     photos: m.photos.map((p) => ({ file: p.file, name: p.name })).filter((p) => p.file),

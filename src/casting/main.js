@@ -1,11 +1,12 @@
 import './styles.css';
 import { parseCasting } from './parse.js';
 import { exportPSD, exportPNG, exportCSV, exportPDF } from './psd.js';
-import { saveModel, deleteModel, clearAll, loadAll } from './idb.js';
+import { saveModel, deleteModel, loadAll } from './idb.js';
 import { cloudEnabled } from './cloud-config.js';
 
 /* ── Estado ─────────────────────────────────────── */
 let models = [];
+let trash = [];
 let draft = { photos: [] };
 let cloud = null; // módulo de nube (lazy) cuando hay sesión
 
@@ -37,6 +38,14 @@ async function persist(m) {
     markSaved();
   } catch (e) { console.warn('No se pudo guardar:', e); markSaved(false); }
 }
+/** Guarda una ficha sin recalcular su orden (para mover a/desde papelera). */
+async function saveOne(m) {
+  try {
+    await saveModel(m);
+    if (cloud) await cloud.pushModel(m);
+    markSaved();
+  } catch (e) { console.warn('No se pudo guardar:', e); markSaved(false); }
+}
 async function persistAll() {
   try {
     await Promise.all(models.map((m, i) => { m.ord = i; return saveModel(m); }));
@@ -50,24 +59,29 @@ async function restore() {
     try {
       const rows = await cloud.listModels();
       if (rows.length) {
-        models = await Promise.all(rows.map(async (r) => ({
-          id: r.id, ord: r.ord, instagram: r.instagram, nombre: r.nombre,
+        const all = await Promise.all(rows.map(async (r) => ({
+          id: r.id, ord: r.ord, trashed: !!r.trashed,
+          instagram: r.instagram, nombre: r.nombre,
           telefono: r.telefono, altura: r.altura, edad: r.edad,
           photos: await Promise.all((r.fotos || []).map(cloudPhoto)),
         })));
-        for (const m of models) await saveModel(m); // cache local
+        models = all.filter((m) => !m.trashed);
+        trash = all.filter((m) => m.trashed);
+        for (const m of all) await saveModel(m); // cache local
         return;
       }
     } catch (e) { console.warn('Nube no disponible, uso local:', e); }
   }
   try {
     const recs = await loadAll();
-    models = await Promise.all(recs.map(async (r) => ({
-      ...r, photos: await Promise.all((r.photos || []).map(rehydrate)),
+    const all = await Promise.all(recs.map(async (r) => ({
+      ...r, trashed: !!r.trashed, photos: await Promise.all((r.photos || []).map(rehydrate)),
     })));
+    models = all.filter((m) => !m.trashed);
+    trash = all.filter((m) => m.trashed);
     // Si la nube está vacía y hay datos locales, migrarlos hacia arriba.
-    if (cloud && models.length) { for (const m of models) await cloud.pushModel(m).catch(() => {}); }
-  } catch { models = []; }
+    if (cloud && all.length) { for (const m of all) await cloud.pushModel(m).catch(() => {}); }
+  } catch { models = []; trash = []; }
 }
 async function cloudPhoto({ path, name }) {
   try {
@@ -109,7 +123,7 @@ app.innerHTML = `
       <button class="btn ghost" data-pdf>PDF</button>
       <button class="btn ghost" data-png>PNG</button>
       <button class="btn solid" data-psd>PSD</button>
-      <button class="btn danger" data-clear title="Vaciar la base">Vaciar</button>
+      <button class="btn ghost" data-trash title="Papelera">🗑 Papelera <b data-trashn>0</b></button>
     </div>
   </header>
 
@@ -185,6 +199,8 @@ function renderList() {
   countEl.textContent = `${models.length} ${models.length === 1 ? 'modelo' : 'modelos'}`;
   listEl.innerHTML = models.map((m, i) => cardHTML(m, i)).join('');
   models.forEach((m, i) => wireCard(listEl.children[i], m, i));
+  const tn = app.querySelector('[data-trashn]');
+  if (tn) tn.textContent = trash.length;
 }
 
 function cardHTML(m, i) {
@@ -222,11 +238,13 @@ function wireCard(el, m, i) {
       clearTimeout(t); t = setTimeout(() => persist(m), 350); // debounce
     }));
   el.querySelector('[data-remove]').addEventListener('click', () => {
-    const id = m.id, paths = m.photos.map((p) => p.path).filter(Boolean);
-    models.splice(i, 1); renderList();
-    deleteModel(id);
-    if (cloud) cloud.deleteModelCloud(id, paths).catch((e) => console.warn(e));
-    persistAll();
+    // Soft-delete: va a la papelera (se puede restaurar).
+    models.splice(i, 1);
+    m.trashed = true;
+    trash.unshift(m);
+    renderList();
+    saveOne(m);      // marca trashed=true en local y nube
+    persistAll();    // reindexa el orden de los que quedan
   });
   el.querySelector('[data-up]').addEventListener('click', () => { if (i > 0) { [models[i - 1], models[i]] = [models[i], models[i - 1]]; renderList(); persistAll(); } });
   el.querySelector('[data-down]').addEventListener('click', () => { if (i < models.length - 1) { [models[i + 1], models[i]] = [models[i], models[i + 1]]; renderList(); persistAll(); } });
@@ -285,14 +303,74 @@ app.querySelector('[data-pdf]').addEventListener('click', (e) =>
   withBusy(e.target, async () => download(await exportPDF(models), `casting-${stamp()}.pdf`)));
 app.querySelector('[data-csv]').addEventListener('click', (e) =>
   withBusy(e.target, async () => download(exportCSV(models), `casting-${stamp()}.csv`)));
-app.querySelector('[data-clear]').addEventListener('click', async () => {
-  if (!models.length) return;
-  if (!confirm('¿Vaciar toda la base de casting? Esto borra las fichas y fotos guardadas' + (cloud ? ' (también en la nube)' : '') + '.')) return;
-  const snapshot = models.slice();
-  models = [];
-  await clearAll();
-  if (cloud) await Promise.all(snapshot.map((m) => cloud.deleteModelCloud(m.id, m.photos.map((p) => p.path).filter(Boolean)).catch(() => {})));
+/* ── Papelera ───────────────────────────────────── */
+function restoreOne(m) {
+  const i = trash.indexOf(m);
+  if (i < 0) return;
+  trash.splice(i, 1);
+  m.trashed = false;
+  models.push(m);
   renderList();
+  saveOne(m);
+  persistAll();
+  renderTrash();
+}
+async function purgeOne(m) {
+  const i = trash.indexOf(m);
+  if (i < 0) return;
+  trash.splice(i, 1);
+  await deleteModel(m.id);
+  if (cloud) await cloud.deleteModelCloud(m.id, m.photos.map((p) => p.path).filter(Boolean)).catch((e) => console.warn(e));
+  renderList();
+  renderTrash();
+}
+
+let trashOv = null;
+function renderTrash() {
+  if (!trashOv) return;
+  const body = trashOv.querySelector('[data-trashbody]');
+  if (!trash.length) { body.innerHTML = '<p class="trash-empty">La papelera está vacía.</p>'; return; }
+  body.innerHTML = trash.map((m, i) => `
+    <div class="trash-row" data-ti="${i}">
+      <div class="trash-thumb">${m.photos[0]?.url ? `<img src="${m.photos[0].url}">` : '—'}</div>
+      <div class="trash-info">
+        <b>${escapeHtml(m.nombre || m.instagram || 'sin nombre')}</b>
+        <span>${escapeHtml([m.instagram, m.telefono].filter(Boolean).join(' · ') || '—')}</span>
+      </div>
+      <button class="btn ghost" data-restore="${i}">Restaurar</button>
+      <button class="btn danger" data-purge="${i}">Eliminar</button>
+    </div>`).join('');
+  body.querySelectorAll('[data-restore]').forEach((b) => b.addEventListener('click', () => restoreOne(trash[+b.dataset.restore])));
+  body.querySelectorAll('[data-purge]').forEach((b) => b.addEventListener('click', () => {
+    const m = trash[+b.dataset.purge];
+    if (confirm(`Eliminar definitivamente a "${m.nombre || m.instagram || 'esta ficha'}"? No se puede deshacer.`)) purgeOne(m);
+  }));
+}
+app.querySelector('[data-trash]').addEventListener('click', () => {
+  trashOv = document.createElement('div');
+  trashOv.className = 'trash-ov';
+  trashOv.innerHTML = `
+    <div class="trash-panel">
+      <div class="trash-head">
+        <b>Papelera</b>
+        <div class="trash-headtools">
+          <button class="btn danger" data-emptyall>Vaciar papelera</button>
+          <button class="btn ghost" data-close>Cerrar</button>
+        </div>
+      </div>
+      <div class="trash-body" data-trashbody></div>
+    </div>`;
+  document.body.appendChild(trashOv);
+  renderTrash();
+  const close = () => { trashOv.remove(); trashOv = null; };
+  trashOv.querySelector('[data-close]').addEventListener('click', close);
+  trashOv.addEventListener('click', (e) => { if (e.target === trashOv) close(); });
+  trashOv.querySelector('[data-emptyall]').addEventListener('click', async () => {
+    if (!trash.length) return;
+    if (!confirm(`Vaciar la papelera (${trash.length})? Se eliminan definitivamente.`)) return;
+    const snap = trash.slice();
+    for (const m of snap) await purgeOne(m);
+  });
 });
 
 /* ── Login (solo si la nube está configurada) ───── */
