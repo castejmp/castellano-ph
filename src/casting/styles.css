@@ -36,8 +36,22 @@ body {
 .btn:disabled { opacity: 0.5; cursor: wait; }
 .btn.danger { background: transparent; color: rgba(255,120,90,0.85); border-color: rgba(255,120,90,0.3); }
 .btn.danger:hover { border-color: #ff6b5a; color: #ff6b5a; }
-.saved { font-size: 0.72rem; color: #8fd08a; opacity: 0; transition: opacity 0.25s; margin-right: 0.2rem; }
+.saved { font-size: 0.72rem; color: #8fd08a; opacity: 0; transition: opacity 0.25s; margin-right: 0.2rem; white-space: nowrap; }
 .saved.on { opacity: 1; }
+.saved.err { color: #ff6b5a; }
+
+/* Login */
+.login { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: rgba(8,8,11,0.96); backdrop-filter: blur(4px); }
+.login-box { display: flex; flex-direction: column; gap: 0.7rem; width: min(340px, 90vw); background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 1.6rem; }
+.login-brand { display: flex; align-items: center; gap: 0.6rem; font-weight: 800; letter-spacing: 0.22em; margin-bottom: 0.3rem; }
+.login-brand .mark { width: 18px; height: 18px; border: 3px solid var(--txt); border-radius: 50%; position: relative; }
+.login-brand .mark::before, .login-brand .mark::after { content: ''; position: absolute; top: -3px; bottom: -3px; width: 3px; background: var(--txt); }
+.login-brand .mark::before { left: -7px; } .login-brand .mark::after { right: -7px; }
+.login-box p { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.3rem; }
+.login-box input { background: #0e0e12; color: var(--txt); border: 1px solid var(--line); border-radius: 8px; padding: 0.7rem 0.8rem; font: inherit; }
+.login-box input:focus { outline: none; border-color: var(--accent); }
+.login-box .btn { margin-top: 0.4rem; }
+.login-err { color: #ff6b5a; font-size: 0.78rem; min-height: 1em; text-align: center; }
 
 /* Add zone */
 .add { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 1.2rem; margin-bottom: 1.6rem; }

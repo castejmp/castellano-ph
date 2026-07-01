@@ -2,11 +2,14 @@ import './styles.css';
 import { parseCasting } from './parse.js';
 import { exportPSD, exportPNG, exportCSV, exportPDF } from './psd.js';
 import { saveModel, deleteModel, clearAll, loadAll } from './idb.js';
+import { cloudEnabled } from './cloud-config.js';
 
 /* ── Estado ─────────────────────────────────────── */
 let models = [];
 let draft = { photos: [] };
-let seq = 1;
+let cloud = null; // módulo de nube (lazy) cuando hay sesión
+
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()));
 
 const FIELDS = [
   { key: 'instagram', label: 'Instagram', ph: '@usuario' },
@@ -17,34 +20,63 @@ const FIELDS = [
 ];
 
 /* ── Base de datos local (IndexedDB): guarda fichas + fotos ── */
-function markSaved() {
+function markSaved(ok = true) {
   const el = document.querySelector('[data-saved]');
   if (!el) return;
+  el.textContent = ok ? (cloud ? 'guardado en la nube ✓' : 'guardado ✓') : 'error al guardar';
+  el.classList.toggle('err', !ok);
   el.classList.add('on');
   clearTimeout(markSaved._t);
-  markSaved._t = setTimeout(() => el.classList.remove('on'), 1200);
+  markSaved._t = setTimeout(() => el.classList.remove('on'), 1600);
 }
 async function persist(m) {
   try {
     m.ord = models.indexOf(m);
     await saveModel(m);
+    if (cloud) await cloud.pushModel(m);
     markSaved();
-  } catch (e) { console.warn('No se pudo guardar:', e); }
+  } catch (e) { console.warn('No se pudo guardar:', e); markSaved(false); }
 }
 async function persistAll() {
   try {
     await Promise.all(models.map((m, i) => { m.ord = i; return saveModel(m); }));
+    if (cloud) await Promise.all(models.map((m) => cloud.pushModel(m)));
     markSaved();
-  } catch (e) { console.warn('No se pudo guardar:', e); }
+  } catch (e) { console.warn('No se pudo guardar:', e); markSaved(false); }
 }
 async function restore() {
+  // Con sesión en la nube: la nube manda. Sin ella: base local (IndexedDB).
+  if (cloud) {
+    try {
+      const rows = await cloud.listModels();
+      if (rows.length) {
+        models = await Promise.all(rows.map(async (r) => ({
+          id: r.id, ord: r.ord, instagram: r.instagram, nombre: r.nombre,
+          telefono: r.telefono, altura: r.altura, edad: r.edad,
+          photos: await Promise.all((r.fotos || []).map(cloudPhoto)),
+        })));
+        for (const m of models) await saveModel(m); // cache local
+        return;
+      }
+    } catch (e) { console.warn('Nube no disponible, uso local:', e); }
+  }
   try {
     const recs = await loadAll();
     models = await Promise.all(recs.map(async (r) => ({
       ...r, photos: await Promise.all((r.photos || []).map(rehydrate)),
     })));
-    seq = models.reduce((mx, m) => Math.max(mx, m.id), 0) + 1;
+    // Si la nube está vacía y hay datos locales, migrarlos hacia arriba.
+    if (cloud && models.length) { for (const m of models) await cloud.pushModel(m).catch(() => {}); }
   } catch { models = []; }
+}
+async function cloudPhoto({ path, name }) {
+  try {
+    const file = await cloud.fetchPhoto(path);
+    const url = URL.createObjectURL(file);
+    let bitmap = null;
+    try { bitmap = await createImageBitmap(file); } catch { /* no imagen */ }
+    return { file, url, bitmap, name, path };
+  } catch { return { name, path, url: '', bitmap: null }; }
 }
 async function rehydrate({ file, name }) {
   const url = URL.createObjectURL(file);
@@ -139,7 +171,7 @@ app.querySelector('[data-addbtn]').addEventListener('click', () => {
   blocks.forEach((block, i) => {
     const parsed = parseCasting(block);
     const photos = i === 0 ? draft.photos : []; // las fotos del draft van al primero
-    models.push({ id: seq++, photos, ...parsed });
+    models.push({ id: uid(), photos, ...parsed });
   });
   draft = { photos: [] };
   textEl.value = '';
@@ -189,7 +221,13 @@ function wireCard(el, m, i) {
       m[inp.dataset.key] = inp.value; updateCardBadge(el, m);
       clearTimeout(t); t = setTimeout(() => persist(m), 350); // debounce
     }));
-  el.querySelector('[data-remove]').addEventListener('click', () => { const id = m.id; models.splice(i, 1); renderList(); deleteModel(id).then(persistAll); });
+  el.querySelector('[data-remove]').addEventListener('click', () => {
+    const id = m.id, paths = m.photos.map((p) => p.path).filter(Boolean);
+    models.splice(i, 1); renderList();
+    deleteModel(id);
+    if (cloud) cloud.deleteModelCloud(id, paths).catch((e) => console.warn(e));
+    persistAll();
+  });
   el.querySelector('[data-up]').addEventListener('click', () => { if (i > 0) { [models[i - 1], models[i]] = [models[i], models[i - 1]]; renderList(); persistAll(); } });
   el.querySelector('[data-down]').addEventListener('click', () => { if (i < models.length - 1) { [models[i + 1], models[i]] = [models[i], models[i + 1]]; renderList(); persistAll(); } });
 
@@ -249,15 +287,65 @@ app.querySelector('[data-csv]').addEventListener('click', (e) =>
   withBusy(e.target, async () => download(exportCSV(models), `casting-${stamp()}.csv`)));
 app.querySelector('[data-clear]').addEventListener('click', async () => {
   if (!models.length) return;
-  if (!confirm('¿Vaciar toda la base de casting? Esto borra las fichas y fotos guardadas.')) return;
+  if (!confirm('¿Vaciar toda la base de casting? Esto borra las fichas y fotos guardadas' + (cloud ? ' (también en la nube)' : '') + '.')) return;
+  const snapshot = models.slice();
   models = [];
   await clearAll();
+  if (cloud) await Promise.all(snapshot.map((m) => cloud.deleteModelCloud(m.id, m.photos.map((p) => p.path).filter(Boolean)).catch(() => {})));
   renderList();
 });
 
-/* ── Init ───────────────────────────────────────── */
-(async () => {
+/* ── Login (solo si la nube está configurada) ───── */
+function showLogin(onOk) {
+  const ov = document.createElement('div');
+  ov.className = 'login';
+  ov.innerHTML = `
+    <form class="login-box">
+      <div class="login-brand"><span class="mark"></span> CASTING</div>
+      <p>Ingresá para ver y cargar el casting.</p>
+      <input type="email" placeholder="Email" autocomplete="username" required data-email />
+      <input type="password" placeholder="Contraseña" autocomplete="current-password" required data-pass />
+      <button class="btn solid" type="submit">Entrar</button>
+      <span class="login-err" data-err></span>
+    </form>`;
+  document.body.appendChild(ov);
+  const form = ov.querySelector('form');
+  const err = ov.querySelector('[data-err]');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = form.querySelector('button'); btn.disabled = true; btn.textContent = 'Entrando…';
+    try {
+      await cloud.signIn(ov.querySelector('[data-email]').value.trim(), ov.querySelector('[data-pass]').value);
+      ov.remove();
+      onOk();
+    } catch (ex) {
+      err.textContent = /Invalid/i.test(ex.message) ? 'Email o contraseña incorrectos.' : ex.message;
+      btn.disabled = false; btn.textContent = 'Entrar';
+    }
+  });
+}
+
+async function boot() {
   await restore();
   renderList();
   renderDraftThumbs();
+  const s = document.querySelector('[data-saved]');
+  if (s && cloud) { s.textContent = 'nube conectada'; s.classList.add('on'); setTimeout(() => s.classList.remove('on'), 1800); }
+}
+
+/* ── Init ───────────────────────────────────────── */
+(async () => {
+  if (cloudEnabled()) {
+    cloud = await import('./cloud.js');
+    const user = await cloud.currentUser().catch(() => null);
+    // Botón de salir en la nav.
+    const out = document.createElement('button');
+    out.className = 'btn ghost'; out.textContent = 'Salir';
+    out.addEventListener('click', async () => { await cloud.signOut(); location.reload(); });
+    app.querySelector('.actions').appendChild(out);
+    if (user) boot();
+    else showLogin(boot);
+  } else {
+    boot();
+  }
 })();
