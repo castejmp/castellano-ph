@@ -1,6 +1,7 @@
 import './styles.css';
 import { parseCasting } from './parse.js';
-import { exportPSD, exportPNG, renderBoard } from './psd.js';
+import { exportPSD, exportPNG, exportCSV, exportPDF } from './psd.js';
+import { saveModel, deleteModel, clearAll, loadAll } from './idb.js';
 
 /* ── Estado ─────────────────────────────────────── */
 let models = [];
@@ -15,19 +16,41 @@ const FIELDS = [
   { key: 'edad', label: 'Edad', ph: '17 años' },
 ];
 
-/* Persistencia de texto (las fotos quedan en memoria de la sesión). */
-function persist() {
-  try {
-    localStorage.setItem('casting', JSON.stringify(
-      models.map((m) => ({ instagram: m.instagram, nombre: m.nombre, telefono: m.telefono, altura: m.altura, edad: m.edad }))
-    ));
-  } catch { /* sin storage */ }
+/* ── Base de datos local (IndexedDB): guarda fichas + fotos ── */
+function markSaved() {
+  const el = document.querySelector('[data-saved]');
+  if (!el) return;
+  el.classList.add('on');
+  clearTimeout(markSaved._t);
+  markSaved._t = setTimeout(() => el.classList.remove('on'), 1200);
 }
-function restore() {
+async function persist(m) {
   try {
-    const raw = JSON.parse(localStorage.getItem('casting') || '[]');
-    models = raw.map((m) => ({ id: seq++, photos: [], ...m }));
+    m.ord = models.indexOf(m);
+    await saveModel(m);
+    markSaved();
+  } catch (e) { console.warn('No se pudo guardar:', e); }
+}
+async function persistAll() {
+  try {
+    await Promise.all(models.map((m, i) => { m.ord = i; return saveModel(m); }));
+    markSaved();
+  } catch (e) { console.warn('No se pudo guardar:', e); }
+}
+async function restore() {
+  try {
+    const recs = await loadAll();
+    models = await Promise.all(recs.map(async (r) => ({
+      ...r, photos: await Promise.all((r.photos || []).map(rehydrate)),
+    })));
+    seq = models.reduce((mx, m) => Math.max(mx, m.id), 0) + 1;
   } catch { models = []; }
+}
+async function rehydrate({ file, name }) {
+  const url = URL.createObjectURL(file);
+  let bitmap = null;
+  try { bitmap = await createImageBitmap(file); } catch { /* no imagen */ }
+  return { file, url, bitmap, name };
 }
 
 /* ── Fotos ──────────────────────────────────────── */
@@ -35,7 +58,7 @@ async function toPhoto(file) {
   const url = URL.createObjectURL(file);
   let bitmap = null;
   try { bitmap = await createImageBitmap(file); } catch { /* no imagen */ }
-  return { url, bitmap, name: file.name };
+  return { file, url, bitmap, name: file.name };
 }
 async function filesToPhotos(fileList) {
   const imgs = [...fileList].filter((f) => f.type.startsWith('image/'));
@@ -48,9 +71,13 @@ app.innerHTML = `
   <header class="top">
     <div class="brand"><span class="mark"></span> CASTING</div>
     <div class="actions">
+      <span class="saved" data-saved>guardado ✓</span>
       <span class="count" data-count>0 modelos</span>
+      <button class="btn ghost" data-csv>CSV</button>
+      <button class="btn ghost" data-pdf>PDF</button>
       <button class="btn ghost" data-png>PNG</button>
-      <button class="btn solid" data-psd>Descargar PSD</button>
+      <button class="btn solid" data-psd>PSD</button>
+      <button class="btn danger" data-clear title="Vaciar la base">Vaciar</button>
     </div>
   </header>
 
@@ -118,7 +145,7 @@ app.querySelector('[data-addbtn]').addEventListener('click', () => {
   textEl.value = '';
   renderDraftThumbs();
   renderList();
-  persist();
+  persistAll();
 });
 
 /* ── Lista de fichas ────────────────────────────── */
@@ -156,19 +183,23 @@ function cardHTML(m, i) {
 }
 
 function wireCard(el, m, i) {
+  let t;
   el.querySelectorAll('input[data-key]').forEach((inp) =>
-    inp.addEventListener('input', () => { m[inp.dataset.key] = inp.value; persist(); updateCardBadge(el, m); }));
-  el.querySelector('[data-remove]').addEventListener('click', () => { models.splice(i, 1); renderList(); persist(); });
-  el.querySelector('[data-up]').addEventListener('click', () => { if (i > 0) { [models[i - 1], models[i]] = [models[i], models[i - 1]]; renderList(); persist(); } });
-  el.querySelector('[data-down]').addEventListener('click', () => { if (i < models.length - 1) { [models[i + 1], models[i]] = [models[i], models[i + 1]]; renderList(); persist(); } });
+    inp.addEventListener('input', () => {
+      m[inp.dataset.key] = inp.value; updateCardBadge(el, m);
+      clearTimeout(t); t = setTimeout(() => persist(m), 350); // debounce
+    }));
+  el.querySelector('[data-remove]').addEventListener('click', () => { const id = m.id; models.splice(i, 1); renderList(); deleteModel(id).then(persistAll); });
+  el.querySelector('[data-up]').addEventListener('click', () => { if (i > 0) { [models[i - 1], models[i]] = [models[i], models[i - 1]]; renderList(); persistAll(); } });
+  el.querySelector('[data-down]').addEventListener('click', () => { if (i < models.length - 1) { [models[i + 1], models[i]] = [models[i], models[i + 1]]; renderList(); persistAll(); } });
 
   const photosEl = el.querySelector('[data-photos]');
   el.querySelector('[data-addphoto]').addEventListener('click', () => pickPhotos(m));
   photosEl.querySelectorAll('[data-del]').forEach((b) =>
-    b.addEventListener('click', () => { m.photos.splice(+b.dataset.del, 1); renderList(); }));
+    b.addEventListener('click', () => { m.photos.splice(+b.dataset.del, 1); renderList(); persist(m); }));
   ['dragover', 'dragenter'].forEach((ev) => el.addEventListener(ev, (e) => { e.preventDefault(); el.classList.add('over'); }));
   ['dragleave', 'drop'].forEach((ev) => el.addEventListener(ev, () => el.classList.remove('over')));
-  el.addEventListener('drop', async (e) => { e.preventDefault(); m.photos.push(...await filesToPhotos(e.dataTransfer.files)); renderList(); });
+  el.addEventListener('drop', async (e) => { e.preventDefault(); m.photos.push(...await filesToPhotos(e.dataTransfer.files)); renderList(); persist(m); });
 }
 
 function updateCardBadge(el, m) {
@@ -182,7 +213,7 @@ function updateCardBadge(el, m) {
 function pickPhotos(m) {
   const inp = document.createElement('input');
   inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true;
-  inp.addEventListener('change', async () => { m.photos.push(...await filesToPhotos(inp.files)); renderList(); });
+  inp.addEventListener('change', async () => { m.photos.push(...await filesToPhotos(inp.files)); renderList(); persist(m); });
   inp.click();
 }
 
@@ -212,8 +243,21 @@ app.querySelector('[data-psd]').addEventListener('click', (e) =>
   withBusy(e.target, async () => download(await exportPSD(models), `casting-${stamp()}.psd`)));
 app.querySelector('[data-png]').addEventListener('click', (e) =>
   withBusy(e.target, async () => download(await exportPNG(models), `casting-${stamp()}.png`)));
+app.querySelector('[data-pdf]').addEventListener('click', (e) =>
+  withBusy(e.target, async () => download(await exportPDF(models), `casting-${stamp()}.pdf`)));
+app.querySelector('[data-csv]').addEventListener('click', (e) =>
+  withBusy(e.target, async () => download(exportCSV(models), `casting-${stamp()}.csv`)));
+app.querySelector('[data-clear]').addEventListener('click', async () => {
+  if (!models.length) return;
+  if (!confirm('¿Vaciar toda la base de casting? Esto borra las fichas y fotos guardadas.')) return;
+  models = [];
+  await clearAll();
+  renderList();
+});
 
 /* ── Init ───────────────────────────────────────── */
-restore();
-renderList();
-renderDraftThumbs();
+(async () => {
+  await restore();
+  renderList();
+  renderDraftThumbs();
+})();

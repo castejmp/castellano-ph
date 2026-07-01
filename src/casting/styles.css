@@ -34,6 +34,10 @@ body {
 .btn.ghost { background: transparent; color: var(--txt); border-color: var(--line); }
 .btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
 .btn:disabled { opacity: 0.5; cursor: wait; }
+.btn.danger { background: transparent; color: rgba(255,120,90,0.85); border-color: rgba(255,120,90,0.3); }
+.btn.danger:hover { border-color: #ff6b5a; color: #ff6b5a; }
+.saved { font-size: 0.72rem; color: #8fd08a; opacity: 0; transition: opacity 0.25s; margin-right: 0.2rem; }
+.saved.on { opacity: 1; }
 
 /* Add zone */
 .add { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 1.2rem; margin-bottom: 1.6rem; }

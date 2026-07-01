@@ -149,6 +149,63 @@ export function renderBoard(models) {
   return build(models).board;
 }
 
+/* ── Ficha individual (foto + datos) para PDF ── */
+function renderCard(model, W, H) {
+  const s = W / 860;
+  const foto = fotoCanvas(model, W, H);
+  const datos = datosCanvas(model, W, H, s);
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const c = cv.getContext('2d');
+  c.save(); roundRect(c, 1, 1, W - 2, H - 2, 16 * s); c.clip();
+  c.drawImage(foto, 0, 0); c.drawImage(datos, 0, 0);
+  c.restore();
+  c.strokeStyle = 'rgba(0,0,0,0.25)'; c.lineWidth = 2;
+  roundRect(c, 1, 1, W - 2, H - 2, 16 * s); c.stroke();
+  return cv;
+}
+
+/* ── CSV / hoja de cálculo (separador ; para Excel es-AR, con BOM) ── */
+const igUrl = (h) => (h ? 'https://instagram.com/' + h.replace(/^@/, '') : '-');
+export function exportCSV(models) {
+  const head = ['#', 'Instagram', 'Nombre y apellido', 'Teléfono', 'Altura', 'Edad', 'Fotos', 'Link Instagram'];
+  const esc = (v) => `"${String(v ?? '-').replace(/"/g, '""')}"`;
+  const rows = models.map((m, i) => [
+    i + 1, m.instagram || '-', m.nombre || '-', m.telefono || '-', m.altura || '-', m.edad || '-',
+    m.photos.length, igUrl(m.instagram),
+  ].map(esc).join(';'));
+  const csv = '﻿' + [head.map(esc).join(';'), ...rows].join('\r\n');
+  return new Blob([csv], { type: 'text/csv;charset=utf-8' });
+}
+
+/* ── PDF: planilla A4, 4 fichas por página ── */
+export async function exportPDF(models) {
+  const { jsPDF } = await import('jspdf');
+  const doc = new jsPDF({ unit: 'pt', format: 'a4', orientation: 'portrait' });
+  const pw = doc.internal.pageSize.getWidth();
+  const ph = doc.internal.pageSize.getHeight();
+  const M = 30, cols = 2, rows = 2, gap = 16, headH = 44;
+  const per = cols * rows;
+  const cw = (pw - 2 * M - (cols - 1) * gap) / cols;
+  const chh = (ph - 2 * M - headH - (rows - 1) * gap) / rows;
+
+  models.forEach((m, i) => {
+    const k = i % per;
+    if (i > 0 && k === 0) doc.addPage();
+    if (k === 0) {
+      doc.setFontSize(15); doc.setFont('helvetica', 'bold'); doc.setTextColor(20);
+      doc.text('CASTELLANO · CASTING', M, M + 18);
+      doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(120);
+      doc.text(`${models.length} modelos · pág. ${Math.floor(i / per) + 1}`, pw - M, M + 18, { align: 'right' });
+    }
+    const col = k % cols, row = Math.floor(k / cols);
+    const x = M + col * (cw + gap), y = M + headH + row * (chh + gap);
+    const card = renderCard(m, Math.round(cw * 2), Math.round(chh * 2));
+    doc.addImage(card, 'PNG', x, y, cw, chh);
+  });
+  return doc.output('blob');
+}
+
 export async function exportPNG(models) {
   const board = renderBoard(models);
   return new Promise((res) => board.toBlob((b) => res(b), 'image/png'));
