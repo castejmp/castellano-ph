@@ -123,6 +123,30 @@ body {
 .card-tools { margin-left: auto; display: flex; gap: 0.3rem; }
 .card-tools button { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 6px; width: 28px; height: 28px; cursor: pointer; font-size: 0.8rem; }
 .card-tools button:hover { border-color: var(--accent); color: var(--accent); }
+.card-tools button.edit-btn, .card-tools button.done { width: auto; padding: 0 0.7rem; font-size: 0.72rem; letter-spacing: 0.04em; }
+.card-tools button.done { color: #8fd08a; border-color: rgba(120,200,120,0.4); }
+
+/* Modo lectura (tarjeta) */
+.card.view .thumb.zoom { border: 1px solid var(--line); padding: 0; cursor: zoom-in; background: #000; transition: transform 0.15s, border-color 0.15s; }
+.card.view .thumb.zoom:hover { transform: scale(1.04); border-color: var(--accent); }
+.card.view .thumb.noimg { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 0.7rem; background: #0e0e12; }
+.v-name { grid-column: 1 / -1; font-size: 1.25rem; font-weight: 800; margin: 0.1rem 0 0; }
+.v-ig { grid-column: 1 / -1; color: var(--accent); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+.v-ig.none { color: var(--muted); }
+a.v-ig:hover { text-decoration: underline; }
+.v-data { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0.5rem 1.4rem; margin-top: 0.3rem; }
+.v-data span { font-size: 0.7rem; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; }
+.v-data b { color: var(--txt); font-weight: 600; margin-left: 0.25rem; text-transform: none; letter-spacing: 0; }
+
+/* Lightbox */
+.lightbox { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; background: rgba(0,0,0,0.92); }
+.lightbox img { max-width: 90vw; max-height: 90vh; border-radius: 6px; box-shadow: 0 20px 80px rgba(0,0,0,0.6); }
+.lightbox .lb-close { position: fixed; top: 1.2rem; right: 1.4rem; }
+.lightbox .lb-nav { position: fixed; top: 50%; transform: translateY(-50%); font-size: 2.4rem; line-height: 1; width: 54px; height: 54px; }
+.lightbox .lb-prev { left: 1rem; } .lightbox .lb-next { right: 1rem; }
+.lightbox button { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.25); border-radius: 50%; width: 42px; height: 42px; cursor: pointer; font-size: 1.1rem; display: grid; place-items: center; }
+.lightbox button:hover { background: rgba(255,255,255,0.18); }
+.lightbox .lb-count { position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.7); font-size: 0.8rem; letter-spacing: 0.1em; }
 .field span { margin-bottom: 0.25rem; }
 .field input { width: 100%; background: #0e0e12; color: var(--txt); border: 1px solid var(--line); border-radius: 8px; padding: 0.55rem 0.7rem; font: inherit; font-size: 0.9rem; }
 .field input:focus { outline: none; border-color: var(--accent); }

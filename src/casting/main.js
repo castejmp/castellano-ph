@@ -272,21 +272,28 @@ function renderList() {
   if (cf) cf.hidden = isManual();
 }
 
+const igHref = (h) => 'https://instagram.com/' + String(h || '').replace(/^@/, '').trim();
+
 function cardHTML(m, i, manual) {
   const missing = FIELDS.filter((f) => !String(m[f.key] || '').trim()).length;
-  return `
-    <article class="card" data-i="${i}">
+  const idx = String(i + 1).padStart(2, '0');
+  const badge = missing ? `<span class="warn">${missing} sin dato</span>` : '<span class="ok">completo</span>';
+  const tools = `
+    ${manual ? '<button data-up title="Subir">▲</button><button data-down title="Bajar">▼</button>' : ''}
+    <button data-remove title="Eliminar">🗑</button>`;
+
+  if (m._edit) {
+    return `
+    <article class="card edit" data-i="${i}">
       <div class="card-photos" data-photos>
         ${m.photos.map((p, j) => `<div class="thumb"><img src="${p.url}"><button data-del="${j}">✕</button></div>`).join('')}
         <button class="thumb add-thumb" data-addphoto>＋</button>
       </div>
       <div class="card-fields">
         <div class="card-head">
-          <span class="idx">${String(i + 1).padStart(2, '0')}</span>
-          ${missing ? `<span class="warn">${missing} sin dato</span>` : `<span class="ok">completo</span>`}
+          <span class="idx">${idx}</span>${badge}
           <div class="card-tools">
-            ${manual ? '<button data-up title="Subir">▲</button><button data-down title="Bajar">▼</button>' : ''}
-            <button data-remove title="Eliminar">🗑</button>
+            <button class="done" data-done title="Listo">✓ Listo</button>${tools}
           </div>
         </div>
         ${FIELDS.map((f) => `
@@ -296,26 +303,47 @@ function cardHTML(m, i, manual) {
           </label>`).join('')}
       </div>
     </article>`;
+  }
+
+  // Modo lectura (tarjeta): fotos con zoom + Instagram clickeable.
+  const ig = m.instagram ? `<a class="v-ig" href="${igHref(m.instagram)}" target="_blank" rel="noopener">${escapeHtml(m.instagram)} ↗</a>` : '<span class="v-ig none">—</span>';
+  return `
+    <article class="card view" data-i="${i}">
+      <div class="card-photos">
+        ${m.photos.length
+      ? m.photos.map((p, j) => `<button class="thumb zoom" data-zoom="${j}" title="Ampliar"><img src="${p.url}"></button>`).join('')
+      : '<div class="thumb noimg">sin foto</div>'}
+      </div>
+      <div class="card-fields">
+        <div class="card-head">
+          <span class="idx">${idx}</span>${badge}
+          <div class="card-tools">
+            <button class="edit-btn" data-edit title="Editar">✎ Editar</button>${tools}
+          </div>
+        </div>
+        <h3 class="v-name">${escapeHtml(m.nombre || '—')}</h3>
+        ${ig}
+        <div class="v-data">
+          <span>TEL <b>${escapeHtml(m.telefono || '—')}</b></span>
+          <span>ALTURA <b>${escapeHtml(m.altura || '—')}</b></span>
+          <span>EDAD <b>${escapeHtml(m.edad || '—')}</b></span>
+        </div>
+      </div>
+    </article>`;
 }
 
 function wireCard(el, m) {
-  let t;
-  el.querySelectorAll('input[data-key]').forEach((inp) =>
-    inp.addEventListener('input', () => {
-      m[inp.dataset.key] = inp.value; updateCardBadge(el, m);
-      clearTimeout(t); t = setTimeout(() => persist(m), 350); // debounce
-    }));
+  // Comunes a los dos modos.
   el.querySelector('[data-remove]').addEventListener('click', () => {
     // Soft-delete: va a la papelera (se puede restaurar).
     const ci = models.indexOf(m);
     if (ci >= 0) models.splice(ci, 1);
-    m.trashed = true;
+    m.trashed = true; delete m._edit;
     trash.unshift(m);
     renderList();
     saveOne(m);      // marca trashed=true en local y nube
     persistAll();    // reindexa el orden de los que quedan
   });
-  // Reordenar solo existe en orden manual (los botones no se muestran si hay filtro).
   el.querySelector('[data-up]')?.addEventListener('click', () => {
     const i = models.indexOf(m);
     if (i > 0) { [models[i - 1], models[i]] = [models[i], models[i - 1]]; renderList(); persistAll(); }
@@ -325,6 +353,23 @@ function wireCard(el, m) {
     if (i >= 0 && i < models.length - 1) { [models[i + 1], models[i]] = [models[i], models[i + 1]]; renderList(); persistAll(); }
   });
 
+  if (!m._edit) {
+    // Modo lectura: zoom de fotos + entrar a editar.
+    el.querySelectorAll('[data-zoom]').forEach((b) =>
+      b.addEventListener('click', () => openLightbox(m.photos, +b.dataset.zoom)));
+    el.querySelector('[data-edit]').addEventListener('click', () => { m._edit = true; renderList(); });
+    return;
+  }
+
+  // Modo edición.
+  let t;
+  el.querySelectorAll('input[data-key]').forEach((inp) =>
+    inp.addEventListener('input', () => {
+      m[inp.dataset.key] = inp.value; updateCardBadge(el, m);
+      clearTimeout(t); t = setTimeout(() => persist(m), 350); // debounce
+    }));
+  el.querySelector('[data-done]').addEventListener('click', () => { m._edit = false; renderList(); persist(m); });
+
   const photosEl = el.querySelector('[data-photos]');
   el.querySelector('[data-addphoto]').addEventListener('click', () => pickPhotos(m));
   photosEl.querySelectorAll('[data-del]').forEach((b) =>
@@ -332,6 +377,37 @@ function wireCard(el, m) {
   ['dragover', 'dragenter'].forEach((ev) => el.addEventListener(ev, (e) => { e.preventDefault(); el.classList.add('over'); }));
   ['dragleave', 'drop'].forEach((ev) => el.addEventListener(ev, () => el.classList.remove('over')));
   el.addEventListener('drop', async (e) => { e.preventDefault(); m.photos.push(...await filesToPhotos(e.dataTransfer.files)); renderList(); persist(m); });
+}
+
+/* ── Lightbox (zoom de fotos) ───────────────────── */
+function openLightbox(photos, start) {
+  const list = photos.filter((p) => p.url);
+  if (!list.length) return;
+  let idx = Math.max(0, Math.min(start, list.length - 1));
+  const ov = document.createElement('div');
+  ov.className = 'lightbox';
+  ov.innerHTML = `
+    <button class="lb-close" title="Cerrar">✕</button>
+    <button class="lb-nav lb-prev" title="Anterior">‹</button>
+    <img alt="" />
+    <button class="lb-nav lb-next" title="Siguiente">›</button>
+    <div class="lb-count mono"></div>`;
+  const img = ov.querySelector('img');
+  const count = ov.querySelector('.lb-count');
+  const multi = list.length > 1;
+  ov.querySelector('.lb-prev').style.display = multi ? '' : 'none';
+  ov.querySelector('.lb-next').style.display = multi ? '' : 'none';
+  const show = () => { img.src = list[idx].url; count.textContent = `${idx + 1} / ${list.length}`; };
+  const go = (d) => { idx = (idx + d + list.length) % list.length; show(); };
+  const key = (e) => { if (e.key === 'Escape') close(); else if (e.key === 'ArrowRight') go(1); else if (e.key === 'ArrowLeft') go(-1); };
+  const close = () => { ov.remove(); document.removeEventListener('keydown', key); };
+  ov.querySelector('.lb-close').onclick = close;
+  ov.querySelector('.lb-prev').onclick = () => go(-1);
+  ov.querySelector('.lb-next').onclick = () => go(1);
+  ov.onclick = (e) => { if (e.target === ov) close(); };
+  document.addEventListener('keydown', key);
+  document.body.appendChild(ov);
+  show();
 }
 
 function updateCardBadge(el, m) {
