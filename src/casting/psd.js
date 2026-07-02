@@ -149,17 +149,55 @@ export function renderBoard(models) {
   return build(models).board;
 }
 
-/* ── Ficha individual (foto + datos) para PDF ── */
+/* Dibuja la imagen ENTERA dentro del rect (contain: no recorta caras). */
+function drawContain(c, img, x, y, w, h) {
+  const ir = img.width / img.height, rr = w / h;
+  let dw, dh;
+  if (ir > rr) { dw = w; dh = w / ir; } else { dh = h; dw = h * ir; }
+  c.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+}
+
+/* ── Ficha para PDF: foto ENTERA arriba (contain) + datos abajo,
+   sin superponerse (así no se corta ninguna cara). ── */
 function renderCard(model, W, H) {
   const s = W / 860;
-  const foto = fotoCanvas(model, W, H);
-  const datos = datosCanvas(model, W, H, s);
+  const panelH = Math.round(H * 0.28);
+  const photoH = H - panelH;
   const cv = document.createElement('canvas');
   cv.width = W; cv.height = H;
   const c = cv.getContext('2d');
+
+  // Zona de fotos (fondo oscuro, imágenes contain).
   c.save(); roundRect(c, 1, 1, W - 2, H - 2, 16 * s); c.clip();
-  c.drawImage(foto, 0, 0); c.drawImage(datos, 0, 0);
+  c.fillStyle = '#101014'; c.fillRect(0, 0, W, photoH);
+  const photos = model.photos.filter((p) => p.bitmap);
+  if (photos.length) {
+    const rects = photoRects(photos.length, W, photoH);
+    photos.forEach((p, i) => { const [x, y, w, h] = rects[i]; drawContain(c, p.bitmap, x, y, w, h); });
+  } else {
+    c.fillStyle = '#555'; c.textAlign = 'center'; c.font = `600 ${Math.round(30 * s)}px sans-serif`;
+    c.fillText('sin foto', W / 2, photoH / 2);
+  }
+  // Panel de datos sólido, debajo.
+  c.fillStyle = '#0c0c0f'; c.fillRect(0, photoH, W, panelH);
+  const dash = (v) => (v && String(v).trim() ? v : '—');
+  const px = 30 * s;
+  let y = photoH + 46 * s;
+  c.textAlign = 'left';
+  c.fillStyle = '#fff'; c.font = `800 ${Math.round(42 * s)}px system-ui, sans-serif`;
+  c.fillText(dash(model.nombre).toUpperCase(), px, y);
+  y += 40 * s;
+  c.fillStyle = ACCENT; c.font = `700 ${Math.round(26 * s)}px system-ui, sans-serif`;
+  c.fillText(dash(model.instagram), px, y);
+  y += 34 * s;
+  c.fillStyle = 'rgba(255,255,255,0.82)'; c.font = `500 ${Math.round(24 * s)}px system-ui, sans-serif`;
+  const parts = [];
+  if (model.telefono) parts.push(`TEL ${model.telefono}`);
+  if (model.altura) parts.push(`ALTURA ${model.altura}`);
+  if (model.edad) parts.push(`EDAD ${model.edad}`);
+  c.fillText(parts.join('   ·   ') || '—', px, y);
   c.restore();
+
   c.strokeStyle = 'rgba(0,0,0,0.25)'; c.lineWidth = 2;
   roundRect(c, 1, 1, W - 2, H - 2, 16 * s); c.stroke();
   return cv;
