@@ -77,24 +77,39 @@ async function persistAll() {
     markSaved();
   } catch (e) { console.warn('No se pudo guardar:', e); markSaved(false); }
 }
+let loadNote = null; // mensaje de estado de carga (se muestra si algo falla)
 async function restore() {
+  loadNote = null;
   // Con sesión en la nube: la nube manda. Sin ella: base local (IndexedDB).
   if (cloud) {
     try {
       const rows = await cloud.listModels();
-      if (rows.length) {
-        const all = await Promise.all(rows.map(async (r) => ({
-          id: r.id, ord: r.ord, trashed: !!r.trashed,
-          instagram: r.instagram, nombre: r.nombre,
-          telefono: r.telefono, altura: r.altura, edad: r.edad,
-          photos: await Promise.all((r.fotos || []).map(cloudPhoto)),
-        })));
-        models = all.filter((m) => !m.trashed);
-        trash = all.filter((m) => m.trashed);
-        for (const m of all) await saveModel(m); // cache local
-        return;
+      const all = await Promise.all(rows.map(async (r) => ({
+        id: r.id, ord: r.ord, trashed: !!r.trashed,
+        instagram: r.instagram, nombre: r.nombre,
+        telefono: r.telefono, altura: r.altura, edad: r.edad,
+        photos: await Promise.all((r.fotos || []).map(cloudPhoto)),
+      })));
+      models = all.filter((m) => !m.trashed);
+      trash = all.filter((m) => m.trashed);
+      for (const m of all) await saveModel(m); // cache local
+      // Si la nube estaba vacía pero hay datos locales, subirlos (migración).
+      if (!all.length) {
+        const recs = await loadAll();
+        if (recs.length) {
+          const locals = await Promise.all(recs.map(async (r) => ({
+            ...r, trashed: !!r.trashed, photos: await Promise.all((r.photos || []).map(rehydrate)),
+          })));
+          models = locals.filter((m) => !m.trashed);
+          trash = locals.filter((m) => m.trashed);
+          for (const m of locals) await cloud.pushModel(m).catch(() => {});
+        }
       }
-    } catch (e) { console.warn('Nube no disponible, uso local:', e); }
+      return;
+    } catch (e) {
+      console.error('Error cargando la nube:', e);
+      loadNote = 'No se pudo cargar la base de la nube: ' + (e?.message || e) + ' — mostrando lo que haya local.';
+    }
   }
   try {
     const recs = await loadAll();
@@ -103,8 +118,6 @@ async function restore() {
     })));
     models = all.filter((m) => !m.trashed);
     trash = all.filter((m) => m.trashed);
-    // Si la nube está vacía y hay datos locales, migrarlos hacia arriba.
-    if (cloud && all.length) { for (const m of all) await cloud.pushModel(m).catch(() => {}); }
   } catch { models = []; trash = []; }
 }
 async function cloudPhoto({ path, name }) {
@@ -563,6 +576,17 @@ async function boot() {
   renderDraftThumbs();
   const s = document.querySelector('[data-saved]');
   if (s && cloud) { s.textContent = 'nube conectada'; s.classList.add('on'); setTimeout(() => s.classList.remove('on'), 1800); }
+  showNote();
+}
+
+function showNote() {
+  document.querySelector('.load-note')?.remove();
+  if (!loadNote) return;
+  const b = document.createElement('div');
+  b.className = 'load-note';
+  b.innerHTML = `<span>⚠️ ${loadNote}</span><button data-retry>Reintentar</button>`;
+  app.insertBefore(b, app.querySelector('.filters'));
+  b.querySelector('[data-retry]').addEventListener('click', () => boot());
 }
 
 /* ── Init ───────────────────────────────────────── */

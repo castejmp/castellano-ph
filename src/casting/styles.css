@@ -94,6 +94,11 @@ body {
 .add-foot { display: flex; align-items: center; gap: 1rem; margin-top: 1rem; }
 .tip { color: var(--muted); font-size: 0.76rem; }
 
+/* Aviso de carga (error de nube) */
+.load-note { display: flex; align-items: center; gap: 1rem; justify-content: space-between; background: rgba(255,120,60,0.12); border: 1px solid rgba(255,120,60,0.35); color: #ffc0a0; border-radius: 10px; padding: 0.7rem 1rem; margin-bottom: 1rem; font-size: 0.84rem; }
+.load-note button { background: transparent; border: 1px solid rgba(255,160,120,0.5); color: #ffc0a0; border-radius: 999px; padding: 0.4rem 0.9rem; cursor: pointer; font: inherit; font-size: 0.78rem; white-space: nowrap; }
+.load-note button:hover { background: rgba(255,160,120,0.15); }
+
 /* Filtros */
 .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem; margin-bottom: 1.1rem; }
 .filters .f-search { flex: 1; min-width: 200px; background: var(--panel); color: var(--txt); border: 1px solid var(--line); border-radius: 999px; padding: 0.6rem 1rem; font: inherit; font-size: 0.9rem; }
